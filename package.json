@@ -13,6 +13,7 @@
   "main": "",
   "keywords": [],
   "devDependencies": {
+    "aframe": "^0.8.2",
     "browser-sync": "^2.8.2",
     "grunt": "^1.0.1",
     "grunt-browser-sync": "https://registry.npmjs.org/grunt-browser-sync/-/grunt-browser-sync-2.2.0.tgz",

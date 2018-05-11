@@ -17,6 +17,9 @@ module.exports = merge({
 
     footerJsFiles: [ // Js files to include in the footer
 
+        // node modules
+        // nodeModulesPath + '/tracking.js/node_modules',
+
         // vendor files
         assetPath + '/js/vendor/qrcode.js',
 

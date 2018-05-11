@@ -5,6 +5,14 @@
 
 ... coming soon
 
+## Start server
+
+run  
+- ```npm install```  
+- ```grunt``` or ```grunt build```  
+- ```npm run start```
+
+
 ## Project structure
 
 Important directories:
@@ -24,3 +32,5 @@ Important directories:
 [Device orientation](http://blog.teamtreehouse.com/exploring-javascript-device-apis)
 
 [CSS Variables](https://medium.com/@_bengarrison/accessing-and-modifying-css-variables-with-javascript-2ccb735bbff0)
+
+[a-frame](https://aframe.io/)
