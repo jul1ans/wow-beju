@@ -1,0 +1,29 @@
+
+body {
+}
+
+.oindi {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: solid 2px darkblue;
+    position: relative;
+
+    --orientation-x: 0px;
+    --orientation-y: 0px;
+
+    &:before {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        left: 50%;
+        top: 50%;
+        margin: -2px 0 0 -2px;
+        background: darkslateblue;
+        border-radius: 50%;
+        transform: translate3d(var(--orientation-x), var(--orientation-y), 0);
+        transition: transform .1s linear;
+    }
+}

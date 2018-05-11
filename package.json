@@ -1,0 +1,42 @@
+{
+  "name": "wow-beju",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "directories": {},
+  "scripts": {
+    "start": "nodemon --watch 'views/**/*.html' --exec node server/main.js",
+    "forever": "forever start server/main.js",
+    "restart": "forever restart server/main.js",
+    "stop": "forever stop server/main.js"
+  },
+  "main": "",
+  "keywords": [],
+  "devDependencies": {
+    "browser-sync": "^2.8.2",
+    "grunt": "^1.0.1",
+    "grunt-browser-sync": "https://registry.npmjs.org/grunt-browser-sync/-/grunt-browser-sync-2.2.0.tgz",
+    "grunt-concurrent": "^2.3.1",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^1.0.2",
+    "grunt-contrib-imagemin": "^1.0.1",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-less": "^1.4.0",
+    "grunt-contrib-uglify": "^2.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-serve": "^0.1.6",
+    "grunt-shell": "^2.1.0",
+    "grunt-timer": "^0.6.0",
+    "less-plugin-autoprefix": "~1.5.1",
+    "load-grunt-tasks": "~3.5.2",
+    "merge": "^1.2.0",
+    "nodemon": "^1.17.3"
+  },
+  "dependencies": {
+    "express": "^4.16.3",
+    "forever": "^0.15.3",
+    "socket.io": "^2.1.0"
+  }
+}
