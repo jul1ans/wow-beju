@@ -18,12 +18,13 @@ module.exports = merge({
     footerJsFiles: [ // Js files to include in the footer
 
         // node modules
-        // nodeModulesPath + '/tracking.js/node_modules',
+        nodeModulesPath + '/tracking.js/node_modules',
 
         // vendor files
         assetPath + '/js/vendor/qrcode.js',
 
         // project files
+        assetPath + '/js/modules/**/*.js',
         assetPath + '/js/globals.js',
         assetPath + '/js/main.js'
     ],
