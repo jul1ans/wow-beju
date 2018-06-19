@@ -1,17 +1,18 @@
 var fs = require('fs');
 var express = require('express');
 var app = express();
-var http = require('http').Server(app);
+var httpServer = require('http').Server(app);
 var https = require('https');
 var path = require('path');
+var RoomService = require('./modules/roomService.js');
 
+var _certDir = path.resolve('cert');
 var _viewsDir = path.resolve('views');
 var _distDir = path.resolve('dist');
 
-app.get('/', function (req, res){
+app.get('/', function (req, res) {
     res.sendFile(_viewsDir + '/index.html');
 });
-
 
 app.use(
     '/dist',
@@ -22,24 +23,20 @@ app.use(
     )
 );
 
-console.log('C:', fs.readFileSync('sslcert/server.key', 'utf8'));
-
-var httpsServer = https.createServer({
-    key: '', // fs.readFileSync('sslcert/server.key', 'utf8')
-    certificate: '' // fs.readFileSync('sslcert/server.crt', 'utf8')
-}, app);
-
-httpsServer.listen(2727, function(){
+httpServer.listen(2727, function () {
     console.log('listening on *:2727');
 });
 
-var io = require('socket.io')(httpsServer);
+// var httpsServer = https.createServer({
+//     pfx: fs.readFileSync(_certDir + '/dev_ip.pfx'),
+//     passphrase: '123'
+// }, app);
+//
+// httpsServer.listen(2727, function(){
+//     console.log('listening on *:2727');
+// });
 
-io.on('connection', function(socket){
-    console.log('a user connected');
+var io = require('socket.io')(httpServer);
 
-    socket.on('deviceorientation', function(event){
-        socket.broadcast.emit('change', event);
-    });
-});
+RoomService.init(io);
 

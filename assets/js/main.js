@@ -1,47 +1,39 @@
-/* globals GLOBALS, io*/
+/* globals GLOBALS*/
 
 (function () {
 
-    var socket = io();
+    App.RoomService.init();
 
-    // todo: implement handling for multiple connections
-    var shareCode = GLOBALS.FUNCTIONS.findGetParameter('code');
+    var userType = App.RoomService.getUserType();
+    var socket = App.RoomService.getSocket();
 
-    if (shareCode === null) {
-        /////////
-        // desktop
-        /////////
+    console.log(userType);
 
-        shareCode = GLOBALS.FUNCTIONS.createShareCode();
+    if (userType === App.RoomService.USER_TYPES.HOST) {
+        // todo: move this code into a own module
 
-        var tilt = document.getElementById('tilt');
-        var direction = document.getElementById('direction');
-
-        socket.on('change', function (event) {
-            tilt.innerHTML = event.tiltLR + ' ' + event.tiltFB;
-            direction.innerHTML = event.direction;
-
-            tilt.style.setProperty('--orientation-x', (event.tiltLR / 3.6) + 'px');
-            tilt.style.setProperty('--orientation-y', (event.tiltFB / 3.6) + 'px');
-            direction.style.setProperty('--orientation-x', ((event.direction - 180) / 3.6) + 'px');
+        socket.on('controlData', function (data) {
+            console.log('receive data', data);
         });
-    } else if (window.DeviceOrientationEvent) {
-        /////////
-        // mobile
-        /////////
+
+    } else if (userType === App.RoomService.USER_TYPES.PLAYER) {
+
+        // todo: move this code into a own module
+
+        // check if device supports orientation events
+        if (!window.DeviceOrientationEvent) {
+            alert('device not supported');
+            return;
+        }
 
         window.addEventListener('deviceorientation', function(event) {
             // emit device orientation
-            socket.emit('deviceorientation', {
+            socket.emit('controlData', {
                 tiltLR: parseInt(event.gamma), // Get the left-to-right tilt (in degrees).
                 tiltFB: parseInt(event.beta), // Get the front-to-back tilt (in degrees).
                 direction: parseInt(event.alpha )// Get the direction of the device (in degrees).
             });
         });
-
     }
-    App.Tracking.init();
-
-
 })();
 

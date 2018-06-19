@@ -1,9 +1,6 @@
-/* globals QRCode*/
+/* globals*/
 
 var GLOBALS = (function () {
-
-
-
     return {
         FUNCTIONS: {
             /**
@@ -23,17 +20,6 @@ var GLOBALS = (function () {
                     if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
                 });
                 return result;
-            },
-            /**
-             * Create hash for sharing and display it as qr code
-             * @return {string} shareHash
-             */
-            createShareCode: function () {
-                var shareHash = 'ABC'; // todo: use correct hash
-                var shareUrl = window.location.href + '?code=' + shareHash;
-                new QRCode(document.getElementById("qrCode"), shareUrl);
-
-                return shareHash;
             }
         }
     };
