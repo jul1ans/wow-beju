@@ -53,7 +53,7 @@ App.RoomService = (function (undefined) {
         socket.on('playerConnect', function () {
             alert('player connected');
         });
-        
+
         socket.on('playerDisconnect', function () {
             alert('player disconnected');
         });
