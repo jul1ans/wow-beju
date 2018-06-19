@@ -8,7 +8,10 @@
     var shareCode = GLOBALS.FUNCTIONS.findGetParameter('code');
 
     if (shareCode === null) {
+        /////////
         // desktop
+        /////////
+
         shareCode = GLOBALS.FUNCTIONS.createShareCode();
 
         var tilt = document.getElementById('tilt');
@@ -23,7 +26,10 @@
             direction.style.setProperty('--orientation-x', ((event.direction - 180) / 3.6) + 'px');
         });
     } else if (window.DeviceOrientationEvent) {
+        /////////
         // mobile
+        /////////
+
         window.addEventListener('deviceorientation', function(event) {
             // emit device orientation
             socket.emit('deviceorientation', {
@@ -32,7 +38,10 @@
                 direction: parseInt(event.alpha )// Get the direction of the device (in degrees).
             });
         });
+
     }
+    App.Tracking.init();
+
 
 })();
 

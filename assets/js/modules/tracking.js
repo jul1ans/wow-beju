@@ -7,18 +7,18 @@ App.Tracking = (function (undefined) {
 
     var init = function () {
 
-        var $body = $('body');
+        var body = document.body;
 
         var colors = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
 
-        $body.append('<div>-- START --</div>');
+        body.append('<div>-- START --</div>');
 
         colors.on('track', function(event) {
             if (event.data.length === 0) {
                 // No colors were detected in this frame.
             } else {
                 event.data.forEach(function(rect) {
-                    $body.append('<div>x: ' + rect.x + ' y: ' + rect.y + '</div>');
+                    body.append('<div>x: ' + rect.x + ' y: ' + rect.y + '</div>');
                     // rect.x, rect.y, rect.height, rect.width, rect.color
                 });
             }
