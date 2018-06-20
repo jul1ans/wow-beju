@@ -2,12 +2,12 @@ var configurationLocal = require('./configuration_local');
 var merge = require('merge');
 
 
-const assetPath = './assets';
-const assetPathDist = './dist';
+var assetPath = './assets';
+var assetPathDist = './dist';
 
 
-const nodeModulesPath = './node_modules';
-const bowerPath = assetPath + '/bower_components';
+var nodeModulesPath = './node_modules';
+var bowerPath = assetPath + '/bower_components';
 
 module.exports = merge({
     assetPathDist: assetPathDist,
@@ -16,6 +16,10 @@ module.exports = merge({
     nodeModulesPath: nodeModulesPath,
 
     footerJsFiles: [ // Js files to include in the footer
+
+        // node modules
+        nodeModulesPath + '/three/build/three.js',
+        nodeModulesPath + '/stats-js/build/stats.min.js',
 
         // vendor files
         assetPath + '/js/vendor/qrcode.js',
