@@ -1,33 +1,82 @@
-/*globals GLOBALS, THREE, Stats*/
+/*globals GLOBALS, THREE, Stats, performance*/
 
 var App = App || {};
 
 App.Racer = (function (undefined) {
 
-    var renderer, scene, camera, stats, players = [], animation;
+
+    var renderer, scene, camera, dirLight, stats, players = [], animation;
 
     var SETTINGS = {
-        FOV: 70,
-        NEAR: 1,
-        FAR: 1000
+        // SCENE
+        SCENE: {
+            FOV: 70,
+            NEAR: 1,
+            FAR: 1000,
+            CAMERA_DISTANCE: {
+                y: 25,
+                z: -40
+            }
+        },
+        WORLD: {
+            LEFT: -40,
+            RIGHT: 40,
+            START: -30,
+            END: 10000,
+            HEIGHT: 30
+        },
+        PLAYER: {
+            SIZE: 5,
+            TURN_TIME: 30,
+            TURN_SCALE_FACTOR: 0.1,
+            MIN_TURN: -0.5,
+            MAX_TURN: 0.5,
+            SPEED_X: 0.7,
+            SPEED_Z: 0.1
+        }
     };
 
-    var _createPlayer = function (color, x) {
-        var geometry = new THREE.BoxGeometry(5, 5, 5);
-        var material = new THREE.MeshPhongMaterial({
+    var Player = function (color, x) {
+        this.geometry = new THREE.BoxGeometry(
+            SETTINGS.PLAYER.SIZE,
+            SETTINGS.PLAYER.SIZE,
+            SETTINGS.PLAYER.SIZE
+        );
+
+        this.material = new THREE.MeshPhongMaterial({
             color: color,
+            emissive: 0xffffff,
+            emissiveIntensity: 0.1,
             beta: 0,
-            shininess: 0.5
+            shininess: 0.4
         });
 
-        material.castShadow = true;
-        material.receiveShadow = true;
+        this.object = new THREE.Mesh(this.geometry, this.material);
+        this.object.receiveShadow = true;
+        this.object.castShadow = true;
+        this.object.position.set(x, SETTINGS.PLAYER.SIZE / 1.2, 0);
+        this.currentTurn = 0;
+        this.currentSpeed = 1;
 
-        var mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, 1, 0);
-        scene.add(mesh);
+        scene.add(this.object);
+    };
 
-        return mesh;
+    /**
+     * Turn left / right
+     * @param {number} value (-1 up to 1)
+     * @param {number} (counter)
+     */
+    Player.prototype.turn = function (value, counter) {
+        if (counter === undefined) counter = SETTINGS.PLAYER.TURN_TIME;
+
+        if ((this.currentTurn < SETTINGS.PLAYER.MAX_TURN || value < 0) &&
+            (this.currentTurn > SETTINGS.PLAYER.MIN_TURN || value > 0))
+            this.currentTurn += value / SETTINGS.PLAYER.TURN_TIME;
+
+        this.object.rotation.z = this.currentTurn;
+
+        if (counter > 1)
+            this.turnAnimation = window.requestAnimationFrame(this.turn.bind(this, value, counter - 1));
     };
 
     var _windowResize = function () {
@@ -36,34 +85,94 @@ App.Racer = (function (undefined) {
         renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
+    /**
+     * Move all player forwards and left / right (depending on currentTurn)
+     * @private
+     */
+    var _movePlayer = function () {
+        for (var pIndex in players) {
+            var currentPlayer = players[pIndex];
+            var z = currentPlayer.currentSpeed * SETTINGS.PLAYER.SPEED_Z;
+
+            currentPlayer.object.position.z += z;
+            dirLight.position.z += z;
+            dirLight.target.position.z += z * 0.99;
+            camera.position.z += z;
+
+            // check for maximum left / right movement
+            if ((currentPlayer.object.position.x > SETTINGS.WORLD.LEFT + SETTINGS.PLAYER.SIZE ||
+                    currentPlayer.currentTurn < 0) &&
+                (currentPlayer.object.position.x < SETTINGS.WORLD.RIGHT - SETTINGS.PLAYER.SIZE ||
+                    currentPlayer.currentTurn > 0))
+                currentPlayer.object.position.x -= SETTINGS.PLAYER.SPEED_X * currentPlayer.currentTurn;
+        }
+    };
+
+    /**
+     * Create random world
+     * @private
+     */
+    var _createWorld = function () {
+        // create geometry
+        var floorLength = SETTINGS.WORLD.END - SETTINGS.WORLD.START;
+        var positionZ = (SETTINGS.WORLD.END + SETTINGS.WORLD.START) / 2;
+        var floorGeo = new THREE.BoxGeometry(
+            SETTINGS.WORLD.RIGHT - SETTINGS.WORLD.LEFT,
+            0.1,
+            floorLength
+        );
+        var wallGeo = new THREE.BoxGeometry(0.1, SETTINGS.WORLD.HEIGHT, floorLength);
+
+        // create material
+        var material = new THREE.MeshPhongMaterial({
+            color: 0x3e424c,
+            beta: 0,
+            shininess: 0.5
+        });
+
+        // create objects and set position
+        var floorObj = new THREE.Mesh(floorGeo, material);
+        var leftObj = new THREE.Mesh(wallGeo, material);
+        var rightObj = new THREE.Mesh(wallGeo, material);
+        floorObj.receiveShadow = true;
+        leftObj.receiveShadow = true;
+        rightObj.receiveShadow = true;
+        floorObj.position.set(0, 0, positionZ);
+        leftObj.position.set(SETTINGS.WORLD.LEFT, SETTINGS.WORLD.HEIGHT / 2, positionZ);
+        rightObj.position.set(SETTINGS.WORLD.RIGHT, SETTINGS.WORLD.HEIGHT / 2, positionZ);
+
+        // add objects to scene
+        scene.add(floorObj);
+        scene.add(leftObj);
+        scene.add(rightObj);
+    };
+
     var _render = function () {
         animation = window.requestAnimationFrame(_render);
 
         stats.begin();
 
-        // todo: move player forwards
-
+        _movePlayer();
         renderer.render(scene, camera);
 
         stats.end();
     };
 
     var updatePlayer = function (playerIndex, data) {
-        players[playerIndex].rotation.z = data.tiltFB / 90;
-        // players[playerIndex].rotation.y = data.direction / 360;
-        // players[playerIndex].rotation.x = data.tiltLR / 90;
+        var value = data.tiltFB / 90 * SETTINGS.PLAYER.TURN_SCALE_FACTOR;
+        players[playerIndex].turn(value);
     };
 
     var init = function () {
         // create camera
         camera = new THREE.PerspectiveCamera(
-            SETTINGS.FOV,
+            SETTINGS.SCENE.FOV,
             window.innerWidth / window.innerHeight,
-            SETTINGS.NEAR,
-            SETTINGS.FAR
+            SETTINGS.SCENE.NEAR,
+            SETTINGS.SCENE.FAR
         );
 
-        camera.position.set(0, 10, -10);
+        camera.position.set(0, SETTINGS.SCENE.CAMERA_DISTANCE.y, SETTINGS.SCENE.CAMERA_DISTANCE.z);
         camera.lookAt(0, 0, 0);
 
         // init scene
@@ -73,21 +182,19 @@ App.Racer = (function (undefined) {
         renderer = new THREE.WebGLRenderer({antialias: false});
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.BasicShadowMap;
         document.body.appendChild(renderer.domElement);
 
         window.addEventListener('resize', _windowResize, false);
 
         // add light
-        var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
-        hemiLight.color.setHSL(0.6, 1, 0.6);
-        hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+        var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.8);
         hemiLight.position.set(0, 50, 0);
         scene.add(hemiLight);
 
-        var dirLight = new THREE.DirectionalLight(0xffffff, 1);
-        dirLight.color.setHSL(0.1, 1, 0.95);
-        dirLight.position.set(0, 15, 0);
-        dirLight.lookAt(0, 0, 0);
+        dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, SETTINGS.WORLD.HEIGHT, -15);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 2048;
         dirLight.shadow.mapSize.height = 2048;
@@ -96,9 +203,14 @@ App.Racer = (function (undefined) {
         dirLight.shadow.camera.right = d;
         dirLight.shadow.camera.top = d;
         dirLight.shadow.camera.bottom = -d;
-        dirLight.shadow.camera.far = 3500;
+        dirLight.shadow.camera.near = SETTINGS.SCENE.NEAR;
+        dirLight.shadow.camera.far = SETTINGS.SCENE.FAR;
         dirLight.shadow.bias = -0.0001;
         scene.add(dirLight);
+        scene.add(dirLight.target);
+
+        // add fog
+        scene.fog = new THREE.Fog(0x000000, SETTINGS.SCENE.NEAR, SETTINGS.SCENE.FAR);
 
         // add stats
         stats = new Stats();
@@ -108,15 +220,21 @@ App.Racer = (function (undefined) {
         // start render loop
         _render();
 
+        _createWorld();
 
         // todo: refactor
-        var p1 = _createPlayer(0xff0000, 0);
+        var p1 = new Player(0xd12a0c, 0);
         players.push(p1);
     };
 
     var destroy = function () {
         window.cancelAnimationFrame(animation);
         renderer.domElement.parentNode.removeChild(renderer.domElement);
+
+        for (var pIndex in players) {
+            window.cancelAnimationFrame(players[pIndex].turnAnimation);
+        }
+
         players = [];
     };
 

@@ -11,27 +11,43 @@ App.GameService = (function (undefined) {
      * @private
      */
     var _initHostEvents = function () {
+        // todo: remove this
+        App.Racer.init();
+        App.RoomService.hideQrCode();
 
-        socket.on('startGame', function () {
-
-            App.RoomService.hideQrCode();
-
-            // init game
-            App.Racer.init();
+        window.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft') {
+                App.Racer.updatePlayer(0, {
+                    tiltFB: -150
+                });
+            } else if (e.key === 'ArrowRight') {
+                App.Racer.updatePlayer(0, {
+                    tiltFB: 150
+                });
+            }
         });
 
-        socket.on('controlData', function (data) {
-
-            // todo: update correct player
-            console.log('receive data', data);
-            App.Racer.updatePlayer(0, data);
-        });
-
-        // todo: implement endGame
-        socket.on('playerDisconnect', function () {
-            App.Racer.destroy();
-            App.RoomService.showQrCode();
-        });
+        // todo: uncomment this
+        // socket.on('startGame', function () {
+        //
+        //     App.RoomService.hideQrCode();
+        //
+        //     // init game
+        //     App.Racer.init();
+        // });
+        //
+        // socket.on('controlData', function (data) {
+        //
+        //     // todo: update correct player
+        //     console.log('receive data', data);
+        //     App.Racer.updatePlayer(0, data);
+        // });
+        //
+        // // todo: implement endGame
+        // socket.on('playerDisconnect', function () {
+        //     App.Racer.destroy();
+        //     App.RoomService.showQrCode();
+        // });
     };
 
     /**

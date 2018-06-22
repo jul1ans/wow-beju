@@ -19,6 +19,7 @@ module.exports = merge({
 
         // node modules
         nodeModulesPath + '/three/build/three.js',
+        nodeModulesPath + '/three/build/three.js',
         nodeModulesPath + '/stats-js/build/stats.min.js',
 
         // vendor files
