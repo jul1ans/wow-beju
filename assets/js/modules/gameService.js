@@ -11,8 +11,26 @@ App.GameService = (function (undefined) {
      * @private
      */
     var _initHostEvents = function () {
+
+        socket.on('startGame', function () {
+
+            App.RoomService.hideQrCode();
+
+            // init game
+            App.Racer.init();
+        });
+
         socket.on('controlData', function (data) {
+
+            // todo: update correct player
             console.log('receive data', data);
+            App.Racer.updatePlayer(0, data);
+        });
+
+        // todo: implement endGame
+        socket.on('playerDisconnect', function () {
+            App.Racer.destroy();
+            App.RoomService.showQrCode();
         });
     };
 

@@ -2,9 +2,7 @@
 
 (function () {
 
-    // App.GameService.init();
-
-    App.Racer.init();
+    App.GameService.init();
 
 })();
 

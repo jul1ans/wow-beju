@@ -51,11 +51,13 @@ App.RoomService = (function (undefined) {
         socket.emit('newRoom', shareCode);
 
         socket.on('playerConnect', function () {
-            alert('player connected');
+            // alert('player connected');
+            console.log('player connected');
         });
 
         socket.on('playerDisconnect', function () {
-            alert('player disconnected');
+            // alert('player disconnected');
+            console.log('player disconnected');
         });
     };
 
@@ -123,10 +125,20 @@ App.RoomService = (function (undefined) {
         return socket;
     };
 
+    var hideQrCode = function () {
+        DEFAULT_CONFIG.qrElement.style.display = 'none';
+    };
+
+    var showQrCode = function () {
+        DEFAULT_CONFIG.qrElement.style.display = 'inherit';
+    };
+
     return {
         init: init,
         USER_TYPES: USER_TYPES,
         getUserType: getUserType,
-        getSocket: getSocket
+        getSocket: getSocket,
+        showQrCode: showQrCode,
+        hideQrCode: hideQrCode
     };
 })();

@@ -4,7 +4,7 @@ var App = App || {};
 
 App.Racer = (function (undefined) {
 
-    var renderer, scene, camera, stats, players = [];
+    var renderer, scene, camera, stats, players = [], animation;
 
     var SETTINGS = {
         FOV: 70,
@@ -13,7 +13,7 @@ App.Racer = (function (undefined) {
     };
 
     var _createPlayer = function (color, x) {
-        var geometry = new THREE.BoxBufferGeometry(5, 5, 5);
+        var geometry = new THREE.BoxGeometry(5, 5, 5);
         var material = new THREE.MeshPhongMaterial({
             color: color,
             beta: 0,
@@ -37,15 +37,21 @@ App.Racer = (function (undefined) {
     };
 
     var _render = function () {
-        window.requestAnimationFrame(_render);
+        animation = window.requestAnimationFrame(_render);
 
         stats.begin();
-        if (players[0]) {
-            players[0].rotation.y += 0.01;
-        }
+
+        // todo: move player forwards
 
         renderer.render(scene, camera);
+
         stats.end();
+    };
+
+    var updatePlayer = function (playerIndex, data) {
+        players[playerIndex].rotation.z = data.tiltFB / 90;
+        // players[playerIndex].rotation.y = data.direction / 360;
+        // players[playerIndex].rotation.x = data.tiltLR / 90;
     };
 
     var init = function () {
@@ -108,7 +114,15 @@ App.Racer = (function (undefined) {
         players.push(p1);
     };
 
+    var destroy = function () {
+        window.cancelAnimationFrame(animation);
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+        players = [];
+    };
+
     return {
+        updatePlayer: updatePlayer,
+        destroy: destroy,
         init: init
     };
 })();

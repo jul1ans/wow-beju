@@ -27,6 +27,9 @@ Room.prototype.addPlayer = function (player) {
     this.players.push(player);
     this.informHost('playerConnect');
 
+    // todo: start game after all player are added
+    this.informHost('startGame');
+
     return true;
 };
 
