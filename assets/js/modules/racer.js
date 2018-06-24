@@ -116,6 +116,8 @@ App.Racer = (function (undefined) {
         var playerZ2 = player.object.position.z + halfPlayerSize;
 
         // todo: optimize collision detection
+        // todo: check if barrier is already destroyed (remove barrier from array to reduce block size)
+        // todo: also remove barriers where z value is smaller then camera position (can't be reached)
         var collision = (
                         // collision X
                             (playerX1 >= this.boxSize.x1 && playerX1 <= this.boxSize.x2) ||
