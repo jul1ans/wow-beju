@@ -13,9 +13,23 @@ App.GameService = (function (undefined) {
      * @private
      */
     var _initHostEvents = function () {
+
+        App.Racer.registerFinishFunction(function (winner) {
+            App.Racer.destroy();
+            App.RoomService.showQrCode();
+
+            if (winner === 0) {
+                console.log('FINISHED - no winner');
+            } else {
+                console.log('FINISHED - player ' + winner + ' has won');
+            }
+        });
+
         // todo: remove this
         if (useKeyboard) {
             App.Racer.init();
+            App.Racer.addPlayer();
+            App.Racer.addPlayer();
             App.RoomService.hideQrCode();
 
             window.addEventListener('keydown', function (e) {

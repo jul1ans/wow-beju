@@ -5,7 +5,7 @@ var App = App || {};
 App.Racer = (function (undefined) {
 
 
-    var renderer, scene, camera, dirLight, stats, players = [], animation, barriers = [], finished = false;
+    var renderer, scene, camera, dirLight, stats, players = [], animation, barriers = [], finished = false, finishFunction;
 
     var SETTINGS = {
         // SCENE
@@ -27,11 +27,26 @@ App.Racer = (function (undefined) {
             LEFT: -40,
             RIGHT: 40,
             START: -30,
-            END: 1000,
+            END: 500,
+            // END: 10000,
             HEIGHT: 30,
-            BARRIERS: 500
+            BARRIERS: 30,
+            // BARRIERS: 500,
+            SAVE_AREA: {
+                START: 100,
+                END: 50
+            }
         },
         PLAYER: {
+            COLORS: [
+                0xd12a0c,
+                0x0bd15e
+            ],
+            START_X_POSITION: [
+                15,
+                -15
+            ],
+            MAX_AMOUNT: 2,
             SIZE: 5,
             TURN_TIME: 30,
             TURN_SCALE_FACTOR: 0.1,
@@ -225,7 +240,24 @@ App.Racer = (function (undefined) {
      */
     var _finishGame = function () {
         finished = true;
-        console.log('FINISHED');
+        var winnerIndex;
+
+        // check which player has the highest z value
+        for (var i in players) {
+            if (winnerIndex === undefined ||
+                players[winnerIndex].object.position.z < players[i].object.position.z) {
+                winnerIndex = i;
+            }
+        }
+
+        // 0 = draw; 1 = player 1; 2 = player 2
+        var winner = parseInt(winnerIndex) + 1;
+
+        if (players.length === 2 && players[0].object.position.z === players[1].object.position.z) {
+            winner = 0;
+        }
+
+        finishFunction(winner);
     };
 
     /**
@@ -233,15 +265,22 @@ App.Racer = (function (undefined) {
      * @private
      */
     var _movePlayer = function () {
-        var zValues = [];
+        var minZ, maxZ;
 
         for (var pIndex in players) {
             var currentPlayer = players[pIndex];
-            zValues.push(currentPlayer.move());
-        }
+            var currentPlayerZValue = currentPlayer.move();
 
-        var minZ = Math.min(zValues);
-        var maxZ = Math.max(zValues);
+            // set min value
+            if (minZ === undefined || minZ > currentPlayerZValue) {
+                minZ = currentPlayerZValue;
+            }
+
+            // set max value
+            if (maxZ === undefined || maxZ < currentPlayerZValue) {
+                maxZ = currentPlayerZValue;
+            }
+        }
 
         if (maxZ > SETTINGS.WORLD.END) {
             _finishGame();
@@ -262,6 +301,9 @@ App.Racer = (function (undefined) {
         var barrierZ = (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.BARRIERS;
         var worldWidth = Math.abs(SETTINGS.WORLD.LEFT - SETTINGS.WORLD.RIGHT);
 
+        var saveEnd = SETTINGS.WORLD.END - SETTINGS.WORLD.SAVE_AREA.END;
+        var saveStart = SETTINGS.WORLD.START + SETTINGS.WORLD.SAVE_AREA.START;
+
         var material = new THREE.MeshPhongMaterial({
             color: 0x0212cc,
             emissive: 0xffffff,
@@ -274,6 +316,9 @@ App.Racer = (function (undefined) {
 
             var x = Math.floor(Math.random() * worldWidth) - worldWidth / 2;
             var z = i * barrierZ + (Math.floor(Math.random() * barrierZ) / barrierZ - barrierZ / 2);
+
+            // don't position barriers on start and end
+            if (z > saveEnd || z < saveStart) continue;
 
             barriers.push(new Barrier(
                 // 0,
@@ -341,11 +386,45 @@ App.Racer = (function (undefined) {
         stats.end();
     };
 
+
+    /////////
+    // PUBLIC
+    /////////
+
+    /**
+     * Register a function which is called on finish
+     * @param func
+     */
+    var registerFinishFunction = function (func) {
+        finishFunction = func;
+    };
+
+    /**
+     * Update player movement
+     * @param playerIndex
+     * @param data
+     */
     var updatePlayer = function (playerIndex, data) {
+        if (finished) return;
         var value = data.tiltFB / 90 * SETTINGS.PLAYER.TURN_SCALE_FACTOR;
         players[playerIndex].turn(value);
     };
 
+    /**
+     * Create new player and add it to the scene
+     * @returns {boolean} add success or failed
+     */
+    var addPlayer = function () {
+        if (players.length === SETTINGS.PLAYER.MAX_AMOUNT) return false;
+
+        players.push(
+            new Player(SETTINGS.PLAYER.COLORS[players.length], SETTINGS.PLAYER.START_X_POSITION[players.length])
+        );
+    };
+
+    /**
+     * Create scene, renderer, light and call create world function
+     */
     var init = function () {
         // create camera
         camera = new THREE.PerspectiveCamera(
@@ -405,10 +484,6 @@ App.Racer = (function (undefined) {
         _render();
 
         _createWorld();
-
-        // todo: refactor
-        var p1 = new Player(0xd12a0c, 0);
-        players.push(p1);
     };
 
     var destroy = function () {
@@ -425,6 +500,8 @@ App.Racer = (function (undefined) {
     return {
         updatePlayer: updatePlayer,
         destroy: destroy,
-        init: init
+        init: init,
+        registerFinishFunction: registerFinishFunction,
+        addPlayer: addPlayer
     };
 })();
