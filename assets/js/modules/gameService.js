@@ -6,48 +6,52 @@ App.GameService = (function (undefined) {
 
     var userType, socket;
 
+    var useKeyboard = true; // todo: remove this
+
     /**
      * Initialize the host events which cause game changes
      * @private
      */
     var _initHostEvents = function () {
         // todo: remove this
-        App.Racer.init();
-        App.RoomService.hideQrCode();
+        if (useKeyboard) {
+            App.Racer.init();
+            App.RoomService.hideQrCode();
 
-        window.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowLeft') {
-                App.Racer.updatePlayer(0, {
-                    tiltFB: -150
-                });
-            } else if (e.key === 'ArrowRight') {
-                App.Racer.updatePlayer(0, {
-                    tiltFB: 150
-                });
-            }
-        });
+            window.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowLeft') {
+                    App.Racer.updatePlayer(0, {
+                        tiltFB: -150
+                    });
+                } else if (e.key === 'ArrowRight') {
+                    App.Racer.updatePlayer(0, {
+                        tiltFB: 150
+                    });
+                }
+            });
+        } else {
+            socket.on('startGame', function () {
 
-        // todo: uncomment this
-        // socket.on('startGame', function () {
-        //
-        //     App.RoomService.hideQrCode();
-        //
-        //     // init game
-        //     App.Racer.init();
-        // });
-        //
-        // socket.on('controlData', function (data) {
-        //
-        //     // todo: update correct player
-        //     console.log('receive data', data);
-        //     App.Racer.updatePlayer(0, data);
-        // });
-        //
-        // // todo: implement endGame
-        // socket.on('playerDisconnect', function () {
-        //     App.Racer.destroy();
-        //     App.RoomService.showQrCode();
-        // });
+                App.RoomService.hideQrCode();
+
+                // init game
+                App.Racer.init();
+            });
+
+            socket.on('controlData', function (data) {
+
+                // todo: update correct player
+                console.log('receive data', data);
+                App.Racer.updatePlayer(0, data);
+            });
+
+            // todo: implement endGame
+            socket.on('playerDisconnect', function () {
+                App.Racer.destroy();
+                App.RoomService.showQrCode();
+            });
+        }
+
     };
 
     /**

@@ -5,7 +5,7 @@ var App = App || {};
 App.Racer = (function (undefined) {
 
 
-    var renderer, scene, camera, dirLight, stats, players = [], animation;
+    var renderer, scene, camera, dirLight, stats, players = [], animation, barriers = [], finished = false;
 
     var SETTINGS = {
         // SCENE
@@ -16,14 +16,20 @@ App.Racer = (function (undefined) {
             CAMERA_DISTANCE: {
                 y: 25,
                 z: -40
+            },
+            LIGHT_POSITION: {
+                x: -5,
+                y: 30,
+                z: -15
             }
         },
         WORLD: {
             LEFT: -40,
             RIGHT: 40,
             START: -30,
-            END: 10000,
-            HEIGHT: 30
+            END: 1000,
+            HEIGHT: 30,
+            BARRIERS: 500
         },
         PLAYER: {
             SIZE: 5,
@@ -32,10 +38,92 @@ App.Racer = (function (undefined) {
             MIN_TURN: -0.5,
             MAX_TURN: 0.5,
             SPEED_X: 0.7,
-            SPEED_Z: 0.1
+            SPEED_Z: 1,
+            COLLISION_SPEED: 0.7, // value between 0 - 1
+            COLLISION_TIMEOUT: 800 // in ms
         }
     };
 
+    /**
+     * Barrier class which creates a new barrier object
+     * @param x
+     * @param y
+     * @param z
+     * @param width
+     * @param height
+     * @param depth
+     * @param material
+     * @constructor
+     */
+    var Barrier = function (x, y, z, width, height, depth, material) {
+        this.geometry = new THREE.BoxGeometry(width, height, depth);
+        this.material = material;
+
+        this.boxSize = {
+            x1: x - (width / 2),
+            x2: x + (width / 2),
+            y1: y - (height / 2),
+            y2: y + (height / 2),
+            z1: z - (depth / 2),
+            z2: z + (depth / 2)
+        };
+
+        this.object = new THREE.Mesh(this.geometry, this.material);
+        this.object.receiveShadow = true;
+        this.object.position.set(x, y, z);
+        scene.add(this.object);
+    };
+
+    /**
+     * Destroy object
+     * -> reduce y value until object is hidden
+     */
+    Barrier.prototype.destroy = function () {
+        if (this.object.position.y > -5) {
+            this.object.position.y -= 0.08;
+
+            window.requestAnimationFrame(this.destroy.bind(this));
+        }
+    };
+
+    /**
+     * Check if given player collides with barrier
+     * @param player
+     */
+    Barrier.prototype.checkCollision = function (player) {
+
+        var halfPlayerSize = SETTINGS.PLAYER.SIZE / 2;
+        var playerX1 = player.object.position.x - halfPlayerSize;
+        var playerX2 = player.object.position.x + halfPlayerSize;
+        // var playerY1 = player.object.position.y - halfPlayerSize;
+        // var playerY2 = player.object.position.y + halfPlayerSize;
+        var playerZ1 = player.object.position.z - halfPlayerSize;
+        var playerZ2 = player.object.position.z + halfPlayerSize;
+
+        var collision = (
+                        // collision X
+                            (playerX1 >= this.boxSize.x1 && playerX1 <= this.boxSize.x2) ||
+                            (playerX2 >= this.boxSize.x1 && playerX2 <= this.boxSize.x2)
+                        ) &&
+                        (
+                        // collision Z
+                            (playerZ1 >= this.boxSize.z1 && playerZ1 <= this.boxSize.z2) ||
+                            (playerZ2 >= this.boxSize.z1 && playerZ2 <= this.boxSize.z2)
+                        );
+
+        if (collision) {
+            this.destroy();
+        }
+
+        return collision;
+    };
+
+    /**
+     * Player class which controls the player object handling
+     * @param color
+     * @param x
+     * @constructor
+     */
     var Player = function (color, x) {
         this.geometry = new THREE.BoxGeometry(
             SETTINGS.PLAYER.SIZE,
@@ -56,7 +144,7 @@ App.Racer = (function (undefined) {
         this.object.castShadow = true;
         this.object.position.set(x, SETTINGS.PLAYER.SIZE / 1.2, 0);
         this.currentTurn = 0;
-        this.currentSpeed = 1;
+        this.currentSpeed = 1; // value between 0 - 1
 
         scene.add(this.object);
     };
@@ -79,6 +167,52 @@ App.Racer = (function (undefined) {
             this.turnAnimation = window.requestAnimationFrame(this.turn.bind(this, value, counter - 1));
     };
 
+    /**
+     * Move player depending on turn and speed value and return z value
+     * @returns {number}
+     */
+    Player.prototype.move = function () {
+        this.object.position.z += this.currentSpeed * SETTINGS.PLAYER.SPEED_Z;
+
+        // check for maximum left / right movement
+        if ((this.object.position.x > SETTINGS.WORLD.LEFT + SETTINGS.PLAYER.SIZE ||
+            this.currentTurn < 0) &&
+            (this.object.position.x < SETTINGS.WORLD.RIGHT - SETTINGS.PLAYER.SIZE ||
+                this.currentTurn > 0))
+            this.object.position.x -= SETTINGS.PLAYER.SPEED_X * this.currentTurn;
+
+        this.checkCollision();
+
+        return this.object.position.z;
+    };
+
+    /**
+     * Check if player object collides with a barrier
+     */
+    Player.prototype.checkCollision = function () {
+        var collision = false;
+
+        for (var i in barriers) {
+            var barrier = barriers[i];
+
+            if (
+                barrier.checkCollision(this)
+            ) collision = true;
+        }
+
+        if (!collision) return;
+
+        window.clearTimeout(this.resetCollisionTimeout);
+        this.currentSpeed = SETTINGS.PLAYER.COLLISION_SPEED;
+
+        // reset speed after a specific timeout
+        this.resetCollisionTimeout = window.setTimeout(function () {
+            window.requestAnimationFrame(function () {
+                this.currentSpeed = 1;
+            }.bind(this));
+        }.bind(this), SETTINGS.PLAYER.COLLISION_TIMEOUT);
+    };
+
     var _windowResize = function () {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -86,26 +220,73 @@ App.Racer = (function (undefined) {
     };
 
     /**
-     * Move all player forwards and left / right (depending on currentTurn)
+     * Stop moving and inform about winner
+     * @private
+     */
+    var _finishGame = function () {
+        finished = true;
+        console.log('FINISHED');
+    };
+
+    /**
+     * Move all players and move camera depending on slowest player
      * @private
      */
     var _movePlayer = function () {
+        var zValues = [];
+
         for (var pIndex in players) {
             var currentPlayer = players[pIndex];
-            var z = currentPlayer.currentSpeed * SETTINGS.PLAYER.SPEED_Z;
-
-            currentPlayer.object.position.z += z;
-            dirLight.position.z += z;
-            dirLight.target.position.z += z * 0.99;
-            camera.position.z += z;
-
-            // check for maximum left / right movement
-            if ((currentPlayer.object.position.x > SETTINGS.WORLD.LEFT + SETTINGS.PLAYER.SIZE ||
-                    currentPlayer.currentTurn < 0) &&
-                (currentPlayer.object.position.x < SETTINGS.WORLD.RIGHT - SETTINGS.PLAYER.SIZE ||
-                    currentPlayer.currentTurn > 0))
-                currentPlayer.object.position.x -= SETTINGS.PLAYER.SPEED_X * currentPlayer.currentTurn;
+            zValues.push(currentPlayer.move());
         }
+
+        var minZ = Math.min(zValues);
+        var maxZ = Math.max(zValues);
+
+        if (maxZ > SETTINGS.WORLD.END) {
+            _finishGame();
+        }
+
+        dirLight.position.z = minZ + SETTINGS.SCENE.LIGHT_POSITION.z;
+        dirLight.target.position.z = minZ;
+        camera.position.z = minZ + SETTINGS.SCENE.CAMERA_DISTANCE.z;
+    };
+
+
+    /**
+     * Add barriers to world which can collide with the players
+     * @private
+     */
+    var _addBarriers = function () {
+
+        var barrierZ = (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.BARRIERS;
+        var worldWidth = Math.abs(SETTINGS.WORLD.LEFT - SETTINGS.WORLD.RIGHT);
+
+        var material = new THREE.MeshPhongMaterial({
+            color: 0x0212cc,
+            emissive: 0xffffff,
+            emissiveIntensity: 0.01,
+            beta: 0,
+            shininess: 0.1
+        });
+
+        for (var i = 0; i < SETTINGS.WORLD.BARRIERS; i++) {
+
+            var x = Math.floor(Math.random() * worldWidth) - worldWidth / 2;
+            var z = i * barrierZ + (Math.floor(Math.random() * barrierZ) / barrierZ - barrierZ / 2);
+
+            barriers.push(new Barrier(
+                // 0,
+                x,
+                2,
+                z,
+                4,
+                4,
+                4,
+                material
+            ));
+        }
+
     };
 
     /**
@@ -145,6 +326,8 @@ App.Racer = (function (undefined) {
         scene.add(floorObj);
         scene.add(leftObj);
         scene.add(rightObj);
+
+        _addBarriers();
     };
 
     var _render = function () {
@@ -152,7 +335,7 @@ App.Racer = (function (undefined) {
 
         stats.begin();
 
-        _movePlayer();
+        if (finished === false) _movePlayer();
         renderer.render(scene, camera);
 
         stats.end();
@@ -194,7 +377,9 @@ App.Racer = (function (undefined) {
         scene.add(hemiLight);
 
         dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        dirLight.position.set(5, SETTINGS.WORLD.HEIGHT, -15);
+        dirLight.position.set(SETTINGS.SCENE.LIGHT_POSITION.x,
+                              SETTINGS.SCENE.LIGHT_POSITION.y,
+                              SETTINGS.SCENE.LIGHT_POSITION.z);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 2048;
         dirLight.shadow.mapSize.height = 2048;
@@ -214,7 +399,6 @@ App.Racer = (function (undefined) {
 
         // add stats
         stats = new Stats();
-        console.log(stats);
         document.body.appendChild(stats.domElement);
 
         // start render loop
