@@ -41,6 +41,10 @@ App.GameService = (function (undefined) {
                     App.Racer.updatePlayer(0, {
                         tiltFB: 150
                     });
+                } else if (e.key === 'ArrowUp') {
+                    App.Racer.updatePlayer(0, {
+                        powerUp: true
+                    });
                 }
             });
         } else {
