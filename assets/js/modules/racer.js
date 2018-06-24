@@ -27,10 +27,10 @@ App.Racer = (function (undefined) {
             LEFT: -40,
             RIGHT: 40,
             START: -30,
-            END: 500,
+            END: 5000,
             // END: 10000,
             HEIGHT: 30,
-            BARRIERS: 30,
+            BARRIERS: 300,
             // BARRIERS: 500,
             SAVE_AREA: {
                 START: 100,
@@ -115,6 +115,7 @@ App.Racer = (function (undefined) {
         var playerZ1 = player.object.position.z - halfPlayerSize;
         var playerZ2 = player.object.position.z + halfPlayerSize;
 
+        // todo: optimize collision detection
         var collision = (
                         // collision X
                             (playerX1 >= this.boxSize.x1 && playerX1 <= this.boxSize.x2) ||

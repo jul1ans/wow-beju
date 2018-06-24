@@ -1,9 +1,7 @@
 
 # WOW-Shop Ben & Julian
 
-> Cross device application
-
-... coming soon
+> Racing game with cross device control handling.
 
 ## Start server
 
@@ -31,6 +29,4 @@ Important directories:
 
 [Device orientation](http://blog.teamtreehouse.com/exploring-javascript-device-apis)
 
-[CSS Variables](https://medium.com/@_bengarrison/accessing-and-modifying-css-variables-with-javascript-2ccb735bbff0)
-
-[a-frame](https://aframe.io/)
+[Three.js](https://threejs.org/examples/)
