@@ -601,6 +601,10 @@ App.Racer = (function (undefined) {
         App.RacerHud.destroy();
     };
 
+    var maxAmountReached = function () {
+
+    };
+
     return {
         updatePlayer: updatePlayer,
         destroy: destroy,

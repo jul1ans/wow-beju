@@ -57,14 +57,13 @@ App.GameService = (function (undefined) {
                 }
             });
         } else {
-            socket.on('startGame', function () {
 
+            socket.on('playerReady', function () {
                 App.RoomService.hideQrCode();
 
                 // init game
                 App.Racer.init();
 
-                // todo: add correct player
                 App.Racer.addPlayer();
                 App.Racer.addPlayer();
             });

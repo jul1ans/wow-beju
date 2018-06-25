@@ -140,8 +140,7 @@ var RoomService = (function (undefined) {
             if (playerReady) return;
             playerReady = true;
 
-            // todo: check if all player are ready
-            rooms[roomId].informHost('startGame');
+            rooms[roomId].informHost('playerReady');
         });
     };
 
