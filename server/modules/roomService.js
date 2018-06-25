@@ -27,9 +27,6 @@ Room.prototype.addPlayer = function (player) {
     this.players.push(player);
     this.informHost('playerConnect');
 
-    // todo: start game after all player are added
-    this.informHost('startGame');
-
     return true;
 };
 
@@ -114,6 +111,8 @@ var RoomService = (function (undefined) {
     var _joinRoom = function (roomId, player) {
         if (!rooms.hasOwnProperty(roomId)) return false;
 
+        var playerReady = false;
+
         console.log('PLAYER: add to room', roomId);
         rooms[roomId].addPlayer(player);
 
@@ -134,6 +133,15 @@ var RoomService = (function (undefined) {
         // send control data to host
         player.on('controlData', function (data) {
             rooms[roomId].informHost('controlData', data);
+        });
+
+        // listen for ready event
+        player.on('playerReady', function () {
+            if (playerReady) return;
+            playerReady = true;
+
+            // todo: check if all player are ready
+            rooms[roomId].informHost('startGame');
         });
     };
 

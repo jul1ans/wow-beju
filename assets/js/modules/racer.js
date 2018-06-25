@@ -7,7 +7,7 @@ App.Racer = (function (undefined) {
 
     var renderer, scene, camera, dirLight, stats, animation, finishFunction,
         players = [], barriers = [], powerUps = [],
-        finished = false;
+        finished = false, gameStarted = false;
 
     var SETTINGS = {
         // SCENE
@@ -29,22 +29,24 @@ App.Racer = (function (undefined) {
             LEFT: -40,
             RIGHT: 40,
             START: -30,
-            END: 5000,
+            END: 500,
             // END: 10000,
             HEIGHT: 30,
-            BARRIERS: 300,
-            POWER_UPS: 50,
+            BARRIERS: 30,
+            // BARRIERS: 300,
+            POWER_UPS: 20,
             // BARRIERS: 500,
             SAVE_AREA: {
                 START: 100,
                 END: 50
             },
-            MAX_DISTANCE_BETWEEN_PLAYERS: 115
+            MAX_DISTANCE_BETWEEN_PLAYERS: 115,
+            START_TIMEOUT: 3000 // in ms
         },
         PLAYER: {
             COLORS: [
-                0xd12a0c,
-                0x0bd15e
+                '#d12a0c',
+                '#0bd15e'
             ],
             START_X_POSITION: [
                 15,
@@ -152,11 +154,13 @@ App.Racer = (function (undefined) {
 
     /**
      * Player class which controls the player object handling
+     * @param index
      * @param color
      * @param x
      * @constructor
      */
-    var Player = function (color, x) {
+    var Player = function (index, color, x) {
+        this.index = index;
         this.geometry = new THREE.BoxGeometry(
             SETTINGS.PLAYER.SIZE,
             SETTINGS.PLAYER.SIZE,
@@ -176,7 +180,7 @@ App.Racer = (function (undefined) {
         this.object.castShadow = true;
         this.object.position.set(x, SETTINGS.PLAYER.SIZE / 1.2, 0);
         this.currentTurn = 0;
-        this.currentSpeed = 1; // value between 0 - 1
+        this.currentSpeed = 0; // value between 0 - 1
         this.powerUps = 0; // amount of power ups (for acceleration)
 
         scene.add(this.object);
@@ -186,10 +190,10 @@ App.Racer = (function (undefined) {
      * Accelerate player for a certain time
      */
     Player.prototype.usePowerUp = function () {
-        console.log(this.powerUps);
         if (this.powerUps === 0) return;
 
         this.powerUps -= 1;
+        App.RacerHud.removePowerUp(this.index);
 
         this.currentSpeed += SETTINGS.PLAYER.POWER_UP_VALUE;
 
@@ -260,7 +264,10 @@ App.Racer = (function (undefined) {
 
             if (
                 powerUp.checkCollision(this)
-            ) this.powerUps += 1;
+            ) {
+                this.powerUps += 1;
+                App.RacerHud.addPowerUp(this.index);
+            }
         }
 
         if (!collision) return;
@@ -443,6 +450,27 @@ App.Racer = (function (undefined) {
         stats.end();
     };
 
+    /**
+     * Start countdown and turn up player speed after countdown
+     * @private
+     */
+    var _startRace = function () {
+
+        console.log('GAME STARTS IN ' + SETTINGS.WORLD.START_TIMEOUT / 1000 + 'SECONDS');
+
+        window.setTimeout(function () {
+
+            console.log('GAME STARTS');
+
+            gameStarted = true;
+
+            // set player speed after a delay
+            for (var i in players) {
+                players[i].currentSpeed = 1;
+            }
+        }, SETTINGS.WORLD.START_TIMEOUT);
+    };
+
 
     /////////
     // PUBLIC
@@ -462,7 +490,7 @@ App.Racer = (function (undefined) {
      * @param data
      */
     var updatePlayer = function (playerIndex, data) {
-        if (finished) return;
+        if (finished || !gameStarted) return;
 
         // do action depending on data
         if (data.powerUp) {
@@ -480,15 +508,23 @@ App.Racer = (function (undefined) {
     var addPlayer = function () {
         if (players.length === SETTINGS.PLAYER.MAX_AMOUNT) return false;
 
+        App.RacerHud.addPlayer(players.length, SETTINGS.PLAYER.COLORS[players.length]);
+
         players.push(
-            new Player(SETTINGS.PLAYER.COLORS[players.length], SETTINGS.PLAYER.START_X_POSITION[players.length])
+            new Player(players.length, SETTINGS.PLAYER.COLORS[players.length], SETTINGS.PLAYER.START_X_POSITION[players.length])
         );
+
+        if (players.length === SETTINGS.PLAYER.MAX_AMOUNT) _startRace();
     };
 
     /**
      * Create scene, renderer, light and call create world function
      */
     var init = function () {
+
+        // init hud
+        App.RacerHud.init();
+
         // create camera
         camera = new THREE.PerspectiveCamera(
             SETTINGS.SCENE.FOV,
@@ -549,6 +585,9 @@ App.Racer = (function (undefined) {
         _createWorld();
     };
 
+    /**
+     * Reset all data and cancel animation frame
+     */
     var destroy = function () {
         window.cancelAnimationFrame(animation);
         renderer.domElement.parentNode.removeChild(renderer.domElement);
@@ -558,6 +597,8 @@ App.Racer = (function (undefined) {
         }
 
         players = [];
+
+        App.RacerHud.destroy();
     };
 
     return {
