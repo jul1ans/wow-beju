@@ -22,13 +22,17 @@ Room.prototype.setHost = function (host) {
  * @return {boolean}
  */
 Room.prototype.addPlayer = function (player) {
-    if (this.players.length >= CONFIG.MAX_PLAYER) return false;
-
     this.players.push(player);
-    this.informHost('playerConnect');
 
-    // todo: start game after all player are added
-    this.informHost('startGame');
+    var playerLength = 0;
+
+    // calculate player length -> there can be empty entries
+    this.players.forEach(function (player) {
+        if (player === null) return;
+        playerLength += 1;
+    });
+
+    this.informHost('playerConnect', playerLength);
 
     return true;
 };
@@ -40,6 +44,7 @@ Room.prototype.addPlayer = function (player) {
  */
 Room.prototype.informPlayer = function (event, data) {
     this.players.forEach(function (player) {
+        if (player === null) return;
         player.emit(event, data);
     });
 };
@@ -59,14 +64,24 @@ Room.prototype.informHost = function (event, data) {
  * @return {boolean}
  */
 Room.prototype.removePlayer = function (player) {
-    var index = this.players.indexOf(player);
+    var index = this.getPlayerIndex(player);
 
     if (index === -1) return false;
-    this.players.splice(index, 1);
+
+    this.players[index] = null;
 
     this.informHost('playerDisconnect');
 
     return true;
+};
+
+/**
+ * Get player index
+ * @param player
+ * @returns {number}
+ */
+Room.prototype.getPlayerIndex = function (player) {
+    return this.players.indexOf(player);
 };
 
 var RoomService = (function (undefined) {
@@ -117,6 +132,8 @@ var RoomService = (function (undefined) {
         console.log('PLAYER: add to room', roomId);
         rooms[roomId].addPlayer(player);
 
+        var index = rooms[roomId].getPlayerIndex(player);
+
         // init socket events
 
         // remove events on host disconnect
@@ -133,6 +150,7 @@ var RoomService = (function (undefined) {
 
         // send control data to host
         player.on('controlData', function (data) {
+            data.playerIndex = index;
             rooms[roomId].informHost('controlData', data);
         });
     };

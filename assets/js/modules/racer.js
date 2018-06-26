@@ -458,18 +458,17 @@ App.Racer = (function (undefined) {
 
     /**
      * Update player movement
-     * @param playerIndex
      * @param data
      */
-    var updatePlayer = function (playerIndex, data) {
+    var updatePlayer = function (data) {
         if (finished) return;
 
         // do action depending on data
         if (data.powerUp) {
-            players[playerIndex].usePowerUp();
+            players[data.playerIndex].usePowerUp();
         } else {
             var value = data.tiltFB / 90 * SETTINGS.PLAYER.TURN_SCALE_FACTOR;
-            players[playerIndex].turn(value);
+            players[data.playerIndex].turn(value);
         }
     };
 

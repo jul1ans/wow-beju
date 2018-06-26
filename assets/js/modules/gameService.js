@@ -6,7 +6,7 @@ App.GameService = (function (undefined) {
 
     var userType, socket;
 
-    var useKeyboard = true; // todo: remove this
+    var useKeyboard = false; // todo: remove this
 
     /**
      * Initialize the host events which cause game changes
@@ -34,42 +34,48 @@ App.GameService = (function (undefined) {
 
             window.addEventListener('keydown', function (e) {
                 if (e.key === 'ArrowLeft') {
-                    App.Racer.updatePlayer(0, {
+                    App.Racer.updatePlayer({
+                        playerIndex: 0,
                         tiltFB: -150
                     });
                 } else if (e.key === 'ArrowRight') {
-                    App.Racer.updatePlayer(0, {
+                    App.Racer.updatePlayer({
+                        playerIndex: 0,
                         tiltFB: 150
                     });
                 } else if (e.key === 'ArrowUp') {
-                    App.Racer.updatePlayer(0, {
+                    App.Racer.updatePlayer({
+                        playerIndex: 0,
                         powerUp: true
                     });
                 }
             });
         } else {
-            socket.on('startGame', function () {
-
-                App.RoomService.hideQrCode();
-
-                // init game
-                App.Racer.init();
-            });
 
             socket.on('controlData', function (data) {
-
-                // todo: update correct player
-                console.log('receive data', data);
-                App.Racer.updatePlayer(0, data);
+                App.Racer.updatePlayer(data);
             });
 
-            // todo: implement endGame
+            socket.on('playerConnect', function (amountPlayers) {
+                console.log('player connected');
+
+                // todo: handle multiple players
+                if (amountPlayers === 1) {
+                    App.RoomService.hideQrCode();
+
+                    // init game
+                    App.Racer.init();
+
+                    App.Racer.addPlayer();
+                }
+
+            });
+
             socket.on('playerDisconnect', function () {
                 App.Racer.destroy();
                 App.RoomService.showQrCode();
             });
         }
-
     };
 
     /**

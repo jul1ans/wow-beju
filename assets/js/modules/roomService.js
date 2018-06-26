@@ -4,7 +4,7 @@ var App = App || {};
 
 App.RoomService = (function (undefined) {
 
-    var userType, socket, config;
+    var userType, socket, config, playerIndex;
 
     var DEFAULT_CONFIG = {
         codeParam: 'code',
@@ -24,8 +24,7 @@ App.RoomService = (function (undefined) {
      */
     var _createShareCode = function (shareHash) {
         if (shareHash === undefined) {
-            // todo: create random hash
-            shareHash = 'asdfk234j';
+            shareHash = 'BaJ' + Math.floor(Math.random() * 100000);
         }
 
         var shareUrl = window.location.href + '?' + config.typeParam + '=' + USER_TYPES.PLAYER + '&' + config.codeParam + '=' + shareHash;
@@ -42,23 +41,8 @@ App.RoomService = (function (undefined) {
      * @private
      */
     var _initHost = function (shareCode) {
-
         shareCode = _createShareCode(shareCode);
-
-        var tilt = document.getElementById('tilt');
-        var direction = document.getElementById('direction');
-
         socket.emit('newRoom', shareCode);
-
-        socket.on('playerConnect', function () {
-            // alert('player connected');
-            console.log('player connected');
-        });
-
-        socket.on('playerDisconnect', function () {
-            // alert('player disconnected');
-            console.log('player disconnected');
-        });
     };
 
     /**
@@ -70,6 +54,7 @@ App.RoomService = (function (undefined) {
      */
     var _initPlayer = function (roomId) {
         socket.emit('joinRoom', roomId);
+
         socket.on('hostDisconnect', function () {
             alert('host disconnected');
         });
