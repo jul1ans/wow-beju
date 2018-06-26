@@ -117,6 +117,9 @@ var RoomService = (function (undefined) {
         // send host data to all player
         host.on('hostData', function (data) {
             rooms[roomId].informPlayer('hostData', data);
+
+            // reset player after finish event
+            if (data.event === 'finish') rooms[roomId].players = [];
         });
     };
 
@@ -147,6 +150,7 @@ var RoomService = (function (undefined) {
         // re-calculate index
         rooms[roomId].host.on('playerConnect', function () {
             index = rooms[roomId].getPlayerIndex(player);
+            console.log('re-calc player index', index);
         });
 
         // remove player on disconnect
