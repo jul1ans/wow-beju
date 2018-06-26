@@ -68,7 +68,7 @@ Room.prototype.removePlayer = function (player) {
 
     if (index === -1) return false;
 
-    this.players[index] = null;
+    this.players.splice(index, 1);
 
     this.informHost('playerDisconnect');
 
@@ -142,6 +142,11 @@ var RoomService = (function (undefined) {
         rooms[roomId].host.on('disconnect', function () {
             player.removeAllListeners('disconnect');
             player.removeAllListeners('controlData');
+        });
+
+        // re-calculate index
+        rooms[roomId].host.on('playerConnect', function () {
+            index = rooms[roomId].getPlayerIndex(player);
         });
 
         // remove player on disconnect

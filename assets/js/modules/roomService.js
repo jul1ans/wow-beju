@@ -4,7 +4,7 @@ var App = App || {};
 
 App.RoomService = (function (undefined) {
 
-    var userType, socket, config, playerIndex;
+    var userType, socket, config;
 
     var DEFAULT_CONFIG = {
         codeParam: 'code',
@@ -24,7 +24,8 @@ App.RoomService = (function (undefined) {
      */
     var _createShareCode = function (shareHash) {
         if (shareHash === undefined) {
-            shareHash = 'BaJ' + Math.floor(Math.random() * 100000);
+            // shareHash = 'BaJ' + Math.floor(Math.random() * 100000);
+            shareHash = 'BaJ';
         }
 
         var shareUrl = window.location.href + '?' + config.typeParam + '=' + USER_TYPES.PLAYER + '&' + config.codeParam + '=' + shareHash;

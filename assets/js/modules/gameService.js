@@ -17,15 +17,16 @@ App.GameService = (function (undefined) {
      */
     var _initHostEvents = function () {
 
+        var MAX_AMOUNT = App.Racer.getMaxAmount(), initCallbacks = [];
+
         App.Racer.registerFinishFunction(function (winner) {
             App.Racer.destroy();
             App.RoomService.showQrCode();
 
-            // todo: improve winner screen
             if (winner === 0) {
-                console.log('FINISHED - no winner');
+                App.RacerHud.showWinner('FINISHED - no winner');
             } else {
-                console.log('FINISHED - player ' + winner + ' has won');
+                App.RacerHud.showWinner('FINISHED - player ' + winner + ' has won');
             }
 
             socket.emit('hostData', {
@@ -65,29 +66,33 @@ App.GameService = (function (undefined) {
                 App.Racer.updatePlayer(data);
             });
 
-            // socket.on('playerReady', function () {
-            //     App.RoomService.hideQrCode();
-            //
-            //     // init game
-            //     App.Racer.init();
-            //
-            //     App.Racer.addPlayer();
-            //     App.Racer.addPlayer();
-            // });
+            socket.on('playerReady', function () {
+                if (App.Racer.isDestroyed()) {
+                    initCallbacks.push(function () {
+                        App.Racer.addPlayer();
+                    });
+                } else {
+                    App.Racer.addPlayer();
+                }
+            });
 
             socket.on('playerConnect', function (amountPlayers) {
-                console.log('player connected');
+                console.log('player connected', amountPlayers);
 
-                // todo: handle multiple players
-                if (amountPlayers === 1) {
+                App.RacerHud.hideWinner();
+
+                if (amountPlayers === MAX_AMOUNT) {
                     App.RoomService.hideQrCode();
 
                     // init game
                     App.Racer.init();
 
-                    App.Racer.addPlayer();
-                }
+                    for (var i = 0; i < initCallbacks.length; i++) {
+                        initCallbacks[i]();
+                    }
 
+                    initCallbacks = [];
+                }
             });
 
             socket.on('playerDisconnect', function () {
@@ -114,6 +119,8 @@ App.GameService = (function (undefined) {
         var mobileHud = document.getElementById('mobile-hud');
         var startButton = document.getElementById('mobile-hud-start');
         var accelerateButton = document.getElementById('mobile-hud-accelerate');
+        var endWrapper = document.getElementById('mobile-hud-end-wrapper');
+        var endText = document.getElementById('mobile-hud-end-text');
         mobileHud.style.display = 'inherit';
 
 
@@ -138,7 +145,6 @@ App.GameService = (function (undefined) {
             });
         });
 
-
         // init event listener for device orientation and emit control data to socket
         window.addEventListener('deviceorientation', function(event) {
             if (finished === true) {
@@ -158,12 +164,13 @@ App.GameService = (function (undefined) {
             switch (data.event) {
                 case HOST_EVENTS.FINISH:
                     finished = true;
+                    endWrapper.style.display = 'inherit';
+                    accelerateButton.style.display = 'none';
 
-                    // todo: refactor message
                     if (data === 0) {
-                        alert('Oh no, there is no winner');
+                        endText.innerText = 'Oh no, there is no winner';
                     } else {
-                        alert('The winner is player #' + data.body);
+                        endText.innerText = 'The winner is player #' + data.body;
                     }
                     break;
             }

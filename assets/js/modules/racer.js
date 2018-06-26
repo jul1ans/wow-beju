@@ -7,7 +7,7 @@ App.Racer = (function (undefined) {
 
     var renderer, scene, camera, dirLight, stats, animation, finishFunction,
         players = [], barriers = [], powerUps = [],
-        finished = false, gameStarted = false;
+        finished = false, gameStarted = false, destroyed = true;
 
     var SETTINGS = {
         // SCENE
@@ -54,13 +54,14 @@ App.Racer = (function (undefined) {
             ],
             MAX_AMOUNT: 2,
             SIZE: 5,
-            TURN_TIME: 30,
-            TURN_SCALE_FACTOR: 0.1,
+            TURN_TIME: 10,
+            TURN_SCALE_FACTOR: 0.08,
+            QUICK_TURN_SCALE_FACTOR: 1.5,
             MIN_TURN: -0.5,
             MAX_TURN: 0.5,
             SPEED_X: 0.7,
             SPEED_Z: 1,
-            COLLISION_SPEED: 0.7, // value between 0 - 1
+            COLLISION_SPEED: 0.8, // value between 0 - 1
             COLLISION_TIMEOUT: 1000 ,// in ms
             POWER_UP_VALUE: 0.1,
             POWER_UP_TIMEOUT: 1000 // in ms
@@ -491,12 +492,19 @@ App.Racer = (function (undefined) {
     var updatePlayer = function (data) {
         if (finished || !gameStarted) return;
 
+        var player = players[data.playerIndex];
+
         // do action depending on data
         if (data.powerUp) {
-            players[data.playerIndex].usePowerUp();
+            player.usePowerUp();
         } else {
             var value = data.tiltFB / 90 * SETTINGS.PLAYER.TURN_SCALE_FACTOR;
-            players[data.playerIndex].turn(value);
+
+            if ((player.currentTurn < 0 && value > 0) || (player.currentTurn > 0 && value < 0)) {
+                value *= SETTINGS.PLAYER.QUICK_TURN_SCALE_FACTOR;
+            }
+
+            player.turn(value);
         }
     };
 
@@ -582,12 +590,16 @@ App.Racer = (function (undefined) {
         _render();
 
         _createWorld();
+
+        destroyed = false;
     };
 
     /**
      * Reset all data and cancel animation frame
      */
     var destroy = function () {
+        // check if racer is already destroyed
+        if (destroyed) return;
         window.cancelAnimationFrame(animation);
         renderer.domElement.parentNode.removeChild(renderer.domElement);
 
@@ -596,12 +608,37 @@ App.Racer = (function (undefined) {
         }
 
         players = [];
+        barriers = [];
+        powerUps = [];
+        gameStarted = false;
+        finished = false;
 
+        destroyed = true;
         App.RacerHud.destroy();
     };
 
+    /**
+     * Check if max amount of players are reached
+     * @returns {boolean}
+     */
     var maxAmountReached = function () {
+        return this.players.length === SETTINGS.PLAYER.MAX_AMOUNT;
+    };
 
+    /**
+     * Get max amount of allowed players
+     * @returns {number}
+     */
+    var getMaxAmount = function () {
+        return SETTINGS.PLAYER.MAX_AMOUNT;
+    };
+
+    /**
+     * Return if racer is destroyed (not init)
+     * @returns {boolean}
+     */
+    var isDestroyed = function () {
+        return destroyed;
     };
 
     return {
@@ -609,6 +646,9 @@ App.Racer = (function (undefined) {
         destroy: destroy,
         init: init,
         registerFinishFunction: registerFinishFunction,
-        addPlayer: addPlayer
+        addPlayer: addPlayer,
+        maxAmountReached: maxAmountReached,
+        getMaxAmount: getMaxAmount,
+        isDestroyed: isDestroyed
     };
 })();

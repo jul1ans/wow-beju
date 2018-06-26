@@ -6,7 +6,7 @@ App.RacerHud = (function (undefined) {
 
     var initCalled = false,
         players = [],
-        containerEl, playersEl;
+        containerEl, playersEl, winnerEl;
 
     var init = function () {
         if (initCalled) return;
@@ -59,12 +59,34 @@ App.RacerHud = (function (undefined) {
         players[index].removeChild(players[index].childNodes[0]);
     };
 
+    /**
+     * Show winner text
+     * @param text
+     */
+    var showWinner = function (text) {
+        winnerEl = document.createElement('div');
+        winnerEl.classList.add('racer-hud__winner');
+        winnerEl.innerText = text;
+
+        window.document.body.appendChild(winnerEl);
+
+        window.setTimeout(hideWinner, 5000);
+    };
+
+    var hideWinner = function () {
+        if (winnerEl === undefined) return;
+        window.document.body.removeChild(winnerEl);
+        winnerEl = undefined;
+    };
+
     return {
         init: init,
         destroy: destroy,
         addPlayer: addPlayer,
         removePowerUp: removePowerUp,
-        addPowerUp: addPowerUp
+        addPowerUp: addPowerUp,
+        hideWinner: hideWinner,
+        showWinner: showWinner
     };
 
 })();
