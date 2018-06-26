@@ -129,6 +129,8 @@ var RoomService = (function (undefined) {
     var _joinRoom = function (roomId, player) {
         if (!rooms.hasOwnProperty(roomId)) return false;
 
+        var playerReady = false;
+
         console.log('PLAYER: add to room', roomId);
         rooms[roomId].addPlayer(player);
 
@@ -152,6 +154,14 @@ var RoomService = (function (undefined) {
         player.on('controlData', function (data) {
             data.playerIndex = index;
             rooms[roomId].informHost('controlData', data);
+        });
+
+        // listen for ready event
+        player.on('playerReady', function () {
+            if (playerReady) return;
+            playerReady = true;
+
+            rooms[roomId].informHost('playerReady');
         });
     };
 
