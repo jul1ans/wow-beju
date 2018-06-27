@@ -9,7 +9,7 @@ App.GameService = (function (undefined) {
         FINISH: 'finish'
     };
 
-    var useKeyboard = false; // todo: remove this
+    var useKeyboard = true; // todo: remove this
 
     /**
      * Initialize the host events which cause game changes
@@ -45,15 +45,30 @@ App.GameService = (function (undefined) {
             window.addEventListener('keydown', function (e) {
                 if (e.key === 'ArrowLeft') {
                     App.Racer.updatePlayer({
-                        playerIndex: 0,
+                        playerIndex: 1,
                         tiltFB: -150
                     });
                 } else if (e.key === 'ArrowRight') {
                     App.Racer.updatePlayer({
-                        playerIndex: 0,
+                        playerIndex: 1,
                         tiltFB: 150
                     });
                 } else if (e.key === 'ArrowUp') {
+                    App.Racer.updatePlayer({
+                        playerIndex: 1,
+                        powerUp: true
+                    });
+                } else if (e.key === 'a') {
+                    App.Racer.updatePlayer({
+                        playerIndex: 0,
+                        tiltFB: -150
+                    });
+                } else if (e.key === 'd') {
+                    App.Racer.updatePlayer({
+                        playerIndex: 0,
+                        tiltFB: 150
+                    });
+                } else if (e.key === 's') {
                     App.Racer.updatePlayer({
                         playerIndex: 0,
                         powerUp: true

@@ -33,7 +33,8 @@ App.Racer = (function (undefined) {
             END: 10000,
             HEIGHT: 30,
             // BARRIERS: 30,
-            BARRIERS: 300,
+            BARRIERS: 400,
+            // BARRIERS: 0,
             // POWER_UPS: 20,
             POWER_UPS: 100,
             // BARRIERS: 500,
@@ -41,7 +42,7 @@ App.Racer = (function (undefined) {
                 START: 100,
                 END: 50
             },
-            MAX_DISTANCE_BETWEEN_PLAYERS: 115,
+            MAX_DISTANCE_BETWEEN_PLAYERS: 142,
             START_TIMEOUT: 3000 // in ms
         },
         PLAYER: {
@@ -62,7 +63,9 @@ App.Racer = (function (undefined) {
             MAX_TURN: 0.5,
             SPEED_X: 0.7,
             SPEED_Z: 1,
-            COLLISION_SPEED: 0.8, // value between 0 - 1
+            PLAYER_COLLISION_FORCE: 0.3,
+            BARRIER_COLLISION_VALUE: 0.15,
+            MIN_SPEED: 0.3, // minimal player speed
             COLLISION_TIMEOUT: 1000 ,// in ms
             POWER_UP_VALUE: 0.1,
             POWER_UP_TIMEOUT: 1000 // in ms
@@ -127,25 +130,8 @@ App.Racer = (function (undefined) {
      */
     Box.prototype.checkCollision = function (player) {
 
-        var halfPlayerSize = SETTINGS.PLAYER.SIZE / 2;
-        var playerX1 = player.object.position.x - halfPlayerSize;
-        var playerX2 = player.object.position.x + halfPlayerSize;
-        // var playerY1 = player.object.position.y - halfPlayerSize;
-        // var playerY2 = player.object.position.y + halfPlayerSize;
-        var playerZ1 = player.object.position.z - halfPlayerSize;
-        var playerZ2 = player.object.position.z + halfPlayerSize;
-
         // check if box and player collide
-        var collision = (
-                        // collision X
-                            (this.boxSize.x1 <= playerX1 && this.boxSize.x2 >= playerX1) ||
-                            (this.boxSize.x1 <= playerX2 && this.boxSize.x2 >= playerX2)
-                        ) &&
-                        (
-                        // collision Z
-                            (this.boxSize.z1 <= playerZ1 && this.boxSize.z2 >= playerZ1) ||
-                            (this.boxSize.z1 <= playerZ2 && this.boxSize.z2 >= playerZ2)
-                        );
+        var collision = _checkCollision(this.boxSize, player.boxSize);
 
         if (collision) {
             this.destroy();
@@ -199,11 +185,32 @@ App.Racer = (function (undefined) {
 
         this.currentSpeed += SETTINGS.PLAYER.POWER_UP_VALUE;
 
-        window.setTimeout(function () {
-            window.clearTimeout(function () {
+        this.powerUpTimeout = window.setTimeout(function () {
+            window.requestAnimationFrame(function () {
                 this.currentSpeed -= SETTINGS.PLAYER.POWER_UP_VALUE;
             }.bind(this));
         }.bind(this), SETTINGS.PLAYER.POWER_UP_TIMEOUT);
+    };
+
+    /**
+     * Slow down player (reset after a delay)
+     * @param value
+     */
+    Player.prototype.slowDown = function (value) {
+        // slow down player until min speed is reached
+        if (this.currentSpeed - value < SETTINGS.PLAYER.MIN_SPEED) {
+            value = this.currentSpeed - SETTINGS.PLAYER.MIN_SPEED;
+        }
+
+        // reduce current speed
+        this.currentSpeed -= value;
+
+        // reset speed after a specific timeout
+        this.slowDownTimeout = window.setTimeout(function () {
+            window.requestAnimationFrame(function () {
+                this.currentSpeed += value;
+            }.bind(this));
+        }.bind(this), SETTINGS.PLAYER.COLLISION_TIMEOUT);
     };
 
     /**
@@ -247,8 +254,18 @@ App.Racer = (function (undefined) {
      * Check if player object collides with a barrier
      */
     Player.prototype.checkCollision = function () {
-        var collision = false;
+        var barrierCollision = false;
 
+        var halfPlayerSize = SETTINGS.PLAYER.SIZE / 2;
+
+        this.boxSize = {
+            x1: this.object.position.x - halfPlayerSize,
+            x2: this.object.position.x + halfPlayerSize,
+            z1: this.object.position.z - halfPlayerSize,
+            z2: this.object.position.z + halfPlayerSize
+        };
+
+        // check collision with barriers
         for (var i in barriers) {
             var barrier = barriers[i];
 
@@ -256,9 +273,10 @@ App.Racer = (function (undefined) {
 
             if (
                 barrier.checkCollision(this)
-            ) collision = true;
+            ) barrierCollision = true;
         }
 
+        // check collision with power ups
         for (var j in powerUps) {
             var powerUp = powerUps[j];
 
@@ -272,17 +290,47 @@ App.Racer = (function (undefined) {
             }
         }
 
-        if (!collision) return;
+        // check collision with other players
+        for (var p in players) {
+            if (players[p] === this) continue;
 
-        window.clearTimeout(this.resetCollisionTimeout);
-        this.currentSpeed = SETTINGS.PLAYER.COLLISION_SPEED;
+            if (_checkCollision(this.boxSize, players[p].boxSize)) {
+                if (this.object.position.x <= players[p].object.position.x) {
+                    this.turn(Math.abs(this.currentTurn) * SETTINGS.PLAYER.PLAYER_COLLISION_FORCE);
+                    players[p].turn(Math.abs(this.currentTurn) * SETTINGS.PLAYER.PLAYER_COLLISION_FORCE * -1);
+                    players[p].object.position.x += SETTINGS.PLAYER.PLAYER_COLLISION_FORCE * 2;
+                } else {
+                    this.turn(Math.abs(this.currentTurn) * SETTINGS.PLAYER.PLAYER_COLLISION_FORCE * -1);
+                    players[p].turn(Math.abs(this.currentTurn) * SETTINGS.PLAYER.PLAYER_COLLISION_FORCE);
+                    players[p].object.position.x -= SETTINGS.PLAYER.PLAYER_COLLISION_FORCE * 2;
+                }
+            }
+        }
 
-        // reset speed after a specific timeout
-        this.resetCollisionTimeout = window.setTimeout(function () {
-            window.requestAnimationFrame(function () {
-                this.currentSpeed = 1;
-            }.bind(this));
-        }.bind(this), SETTINGS.PLAYER.COLLISION_TIMEOUT);
+        if (barrierCollision) {
+            this.slowDown(SETTINGS.PLAYER.BARRIER_COLLISION_VALUE);
+        }
+    };
+
+    /**
+     * Check if corner of a is inside b
+     * @param boxSizeA
+     * @param boxSizeB
+     * @param last
+     * @private
+     */
+    var _checkCollision = function (boxSizeA, boxSizeB, last) {
+        if (boxSizeA === undefined || boxSizeB === undefined) return false;
+        return (
+                // collision X
+                (boxSizeA.x1 <= boxSizeB.x1 && boxSizeA.x2 >= boxSizeB.x1) ||
+                (boxSizeA.x1 <= boxSizeB.x2 && boxSizeA.x2 >= boxSizeB.x2)
+            ) &&
+            (
+                // collision Z
+                (boxSizeA.z1 <= boxSizeB.z1 && boxSizeA.z2 >= boxSizeB.z1) ||
+                (boxSizeA.z1 <= boxSizeB.z2 && boxSizeA.z2 >= boxSizeB.z2)
+            ) && (last || _checkCollision(boxSizeB, boxSizeA, true));
     };
 
     var _windowResize = function () {
@@ -346,11 +394,23 @@ App.Racer = (function (undefined) {
 
         dirLight.position.z = minZ + SETTINGS.SCENE.LIGHT_POSITION.z;
         dirLight.target.position.z = minZ;
-        camera.position.z = (maxZ + minZ * 2) / 3 + SETTINGS.SCENE.CAMERA_DISTANCE.z;
+        camera.position.z = (maxZ + minZ * 3) / 4 + SETTINGS.SCENE.CAMERA_DISTANCE.z;
     };
-    
-    var _addBoxes = function (material, spaceBetween, boxArray) {
-        for (var i = 0; i < SETTINGS.WORLD.BARRIERS; i++) {
+
+    /**
+     * Box generator
+     * @param material
+     * @param spaceBetween
+     * @param amounts
+     * @param boxArray
+     * @private
+     */
+    var _addBoxes = function (material, spaceBetween, amounts, boxArray) {
+
+        var boxSize = 4;
+        var y = 2;
+
+        for (var i = 0; i < amounts; i++) {
 
             var x = Math.floor(Math.random() * WORLD_WIDTH) - WORLD_WIDTH / 2;
             var z = i * spaceBetween + (Math.floor(Math.random() * spaceBetween) / spaceBetween - spaceBetween / 2);
@@ -361,11 +421,11 @@ App.Racer = (function (undefined) {
             boxArray.push(new Box(
                 // 0,
                 x,
-                2,
+                y + (Math.floor(Math.random() * 100) / 5 - 4) / 10,
                 z,
-                4,
-                4,
-                4,
+                boxSize,
+                boxSize,
+                boxSize,
                 material
             ));
         }
@@ -382,7 +442,8 @@ App.Racer = (function (undefined) {
             emissiveIntensity: 0.01,
             beta: 0,
             shininess: 0.1
-        }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.BARRIERS, barriers);
+        }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.BARRIERS,
+            SETTINGS.WORLD.BARRIERS, barriers);
     };
 
     /**
@@ -396,7 +457,8 @@ App.Racer = (function (undefined) {
             emissiveIntensity: 0.01,
             beta: 0,
             shininess: 0.1
-        }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.POWER_UPS, powerUps);
+        }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.POWER_UPS,
+            SETTINGS.WORLD.POWER_UPS, powerUps);
     };
 
     /**
@@ -605,9 +667,14 @@ App.Racer = (function (undefined) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
 
         for (var pIndex in players) {
+            // clear animation
             window.cancelAnimationFrame(players[pIndex].turnAnimation);
+            // clear timeouts
+            window.clearTimeout(players[pIndex].powerUpTimeout);
+            window.clearTimeout(players[pIndex].slowDownTimeout);
         }
 
+        // reset variables
         players = [];
         barriers = [];
         powerUps = [];
