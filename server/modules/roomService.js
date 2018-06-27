@@ -110,12 +110,21 @@ var RoomService = (function (undefined) {
             delete rooms[roomId];
         });
 
-        // send host data to all player
-        host.on('hostData', function (data) {
-            rooms[roomId].informPlayer('hostData', data);
+        // send new player data to client
+        host.on('newPlayerData', function (data) {
+            if (rooms[roomId].players[data.index] === undefined) {
+                console.error('Missing player with index: ' + data.index);
+                return;
+            }
 
+            rooms[roomId].players[data.index].emit('newPlayerData', data);
+        });
+
+        // send winner index to all player
+        host.on('finish', function (winner) {
+            rooms[roomId].informPlayer('finish', winner);
             // reset player after finish event
-            if (data.event === 'finish') rooms[roomId].players = [];
+            rooms[roomId].players = [];
         });
     };
 

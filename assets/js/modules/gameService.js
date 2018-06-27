@@ -9,7 +9,18 @@ App.GameService = (function (undefined) {
         FINISH: 'finish'
     };
 
-    var useKeyboard = true; // todo: remove this
+    var USE_KEYBOARD = false;
+
+    /**
+     * Add player and inform clients about player informations
+     * @param socket
+     * @private
+     */
+    var _addPlayer = function (socket) {
+        var playerData = App.Racer.addPlayer();
+
+        socket.emit('newPlayerData', playerData);
+    };
 
     /**
      * Initialize the host events which cause game changes
@@ -29,14 +40,10 @@ App.GameService = (function (undefined) {
                 App.RacerHud.showWinner('FINISHED - player ' + winner + ' has won');
             }
 
-            socket.emit('hostData', {
-                event: HOST_EVENTS.FINISH,
-                body: winner
-            });
+            socket.emit('finish', winner);
         });
 
-        // todo: remove this
-        if (useKeyboard) {
+        if (USE_KEYBOARD) {
             App.Racer.init();
             App.Racer.addPlayer();
             App.Racer.addPlayer();
@@ -83,11 +90,9 @@ App.GameService = (function (undefined) {
 
             socket.on('playerReady', function () {
                 if (App.Racer.isDestroyed()) {
-                    initCallbacks.push(function () {
-                        App.Racer.addPlayer();
-                    });
+                    initCallbacks.push(_addPlayer.bind(this, socket));
                 } else {
-                    App.Racer.addPlayer();
+                    _addPlayer(socket);
                 }
             });
 
@@ -166,6 +171,8 @@ App.GameService = (function (undefined) {
                 return;
             }
 
+            // todo: calibrate with initial position
+
             // emit device orientation
             socket.emit('controlData', {
                 tiltLR: parseInt(event.gamma), // Get the left-to-right tilt (in degrees).
@@ -174,23 +181,23 @@ App.GameService = (function (undefined) {
             });
         });
 
-        // init events
-        socket.on('hostData', function (data) {
-            switch (data.event) {
-                case HOST_EVENTS.FINISH:
-                    finished = true;
-                    endWrapper.style.display = 'inherit';
-                    accelerateButton.style.display = 'none';
-
-                    if (data === 0) {
-                        endText.innerText = 'Oh no, there is no winner';
-                    } else {
-                        endText.innerText = 'The winner is player #' + data.body;
-                    }
-                    break;
-            }
+        // player data event
+        socket.on('newPlayerData', function (data) {
+            document.body.style.backgroundColor = data.color;
         });
 
+        // finish event
+        socket.on('finish', function (winner) {
+            finished = true;
+            endWrapper.style.display = 'inherit';
+            accelerateButton.style.display = 'none';
+
+            if (winner === 0) {
+                endText.innerText = 'Oh no, there is no winner';
+            } else {
+                endText.innerText = 'The winner is player #' + winner;
+            }
+        });
     };
 
     var init = function () {

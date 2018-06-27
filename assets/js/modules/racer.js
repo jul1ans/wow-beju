@@ -29,20 +29,15 @@ App.Racer = (function (undefined) {
             LEFT: -40,
             RIGHT: 40,
             START: -30,
-            // END: 500,
-            END: 10000,
+            END: 7000,
             HEIGHT: 30,
-            // BARRIERS: 30,
             BARRIERS: 400,
-            // BARRIERS: 0,
-            // POWER_UPS: 20,
-            POWER_UPS: 100,
-            // BARRIERS: 500,
+            POWER_UPS: 50,
             SAVE_AREA: {
                 START: 100,
                 END: 50
             },
-            MAX_DISTANCE_BETWEEN_PLAYERS: 142,
+            MAX_DISTANCE_BETWEEN_PLAYERS: 136,
             START_TIMEOUT: 3000 // in ms
         },
         PLAYER: {
@@ -54,7 +49,7 @@ App.Racer = (function (undefined) {
                 15,
                 -15
             ],
-            MAX_AMOUNT: 2,
+            MAX_AMOUNT: 1,
             SIZE: 5,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
@@ -66,9 +61,10 @@ App.Racer = (function (undefined) {
             PLAYER_COLLISION_FORCE: 0.3,
             BARRIER_COLLISION_VALUE: 0.15,
             MIN_SPEED: 0.3, // minimal player speed
+            MAX_SPEED: 1.6, // max player speed
             COLLISION_TIMEOUT: 1000 ,// in ms
-            POWER_UP_VALUE: 0.1,
-            POWER_UP_TIMEOUT: 1000 // in ms
+            POWER_UP_VALUE: 0.15,
+            POWER_UP_TIMEOUT: 1200 // in ms
         }
     };
 
@@ -155,6 +151,8 @@ App.Racer = (function (undefined) {
             SETTINGS.PLAYER.SIZE
         );
 
+        this.color = color;
+
         this.material = new THREE.MeshPhongMaterial({
             color: color,
             emissive: 0xffffff,
@@ -180,14 +178,26 @@ App.Racer = (function (undefined) {
     Player.prototype.usePowerUp = function () {
         if (this.powerUps === 0) return;
 
+        var value = SETTINGS.PLAYER.POWER_UP_VALUE;
+
+        // check if max speed is reached
+        if (this.currentSpeed + value > SETTINGS.PLAYER.MAX_SPEED) {
+            value = SETTINGS.PLAYER.MAX_SPEED - this.currentSpeed;
+        }
+
+        // don't use a power up if player can not accelerate
+        if (value < SETTINGS.PLAYER.POWER_UP_VALUE / 2) return;
+
+        // reduce power up
         this.powerUps -= 1;
         App.RacerHud.removePowerUp(this.index);
 
-        this.currentSpeed += SETTINGS.PLAYER.POWER_UP_VALUE;
+        this.currentSpeed += value;
 
+        // reset speed after timeout
         this.powerUpTimeout = window.setTimeout(function () {
             window.requestAnimationFrame(function () {
-                this.currentSpeed -= SETTINGS.PLAYER.POWER_UP_VALUE;
+                this.currentSpeed -= value;
             }.bind(this));
         }.bind(this), SETTINGS.PLAYER.POWER_UP_TIMEOUT);
     };
@@ -418,6 +428,8 @@ App.Racer = (function (undefined) {
             // don't position barriers on start and end
             if (z > SAVE_END || z < SAVE_START) continue;
 
+            // todo: check if x collide with wall
+
             boxArray.push(new Box(
                 // 0,
                 x,
@@ -573,18 +585,28 @@ App.Racer = (function (undefined) {
 
     /**
      * Create new player and add it to the scene
-     * @returns {boolean} add success or failed
+     * @returns {boolean|*} return false if failed or return player data
      */
     var addPlayer = function () {
-        if (players.length === SETTINGS.PLAYER.MAX_AMOUNT) return false;
+        var index = players.length;
+        if (index === SETTINGS.PLAYER.MAX_AMOUNT) return false;
 
-        App.RacerHud.addPlayer(players.length, SETTINGS.PLAYER.COLORS[players.length]);
+        App.RacerHud.addPlayer(index, SETTINGS.PLAYER.COLORS[index]);
 
-        players.push(
-            new Player(players.length, SETTINGS.PLAYER.COLORS[players.length], SETTINGS.PLAYER.START_X_POSITION[players.length])
-        );
+        // create new player
+        var newPlayer = new Player(
+            index,
+            SETTINGS.PLAYER.COLORS[index],
+            SETTINGS.PLAYER.START_X_POSITION[index]);
 
-        if (players.length === SETTINGS.PLAYER.MAX_AMOUNT) _startRace();
+        players.push(newPlayer);
+
+        if (index + 1 === SETTINGS.PLAYER.MAX_AMOUNT) _startRace();
+
+        return {
+            index: index,
+            color: newPlayer.color
+        };
     };
 
     /**
