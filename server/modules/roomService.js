@@ -1,8 +1,4 @@
 
-var CONFIG = {
-    MAX_PLAYER: 2
-};
-
 var Room = function (host) {
     this.host = host;
     this.players = [];
