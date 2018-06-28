@@ -49,7 +49,7 @@ App.Racer = (function (undefined) {
                 15,
                 -15
             ],
-            MAX_AMOUNT: 1,
+            MAX_AMOUNT: 2,
             SIZE: 5,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
@@ -114,7 +114,7 @@ App.Racer = (function (undefined) {
         this.destroyed = true;
 
         if (this.object.position.y > -4) {
-            this.object.position.y -= 0.08;
+            this.object.position.y -= 0.2;
 
             window.requestAnimationFrame(this.destroy.bind(this));
         }

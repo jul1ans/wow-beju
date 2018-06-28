@@ -9,7 +9,7 @@ App.GameService = (function (undefined) {
         FINISH: 'finish'
     };
 
-    var USE_KEYBOARD = false;
+    var USE_KEYBOARD = true;
 
     /**
      * Add player and inform clients about player informations
