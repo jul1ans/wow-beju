@@ -10,7 +10,7 @@ App.RoomService = (function (undefined) {
         codeParam: 'code',
         typeParam: 'type',
         qrElement: document.getElementById("qrCode"),
-        $startScreen: $("#startScreen")
+        $startScreen: $("#start-screen")
     };
 
     var USER_TYPES = {
@@ -24,6 +24,8 @@ App.RoomService = (function (undefined) {
      * @return {string} shareHash
      */
     var _createShareCode = function (shareHash) {
+        config.$startScreen.removeClass('hidden');
+
         if (shareHash === undefined) {
             // shareHash = 'BaJ' + Math.floor(Math.random() * 100000);
             shareHash = 'BaJ';

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -11,7 +11,7 @@
 </head>
 <body>
 
-    <div id="startScreen" class="start-screen">
+    <div id="start-screen" class="start-screen hidden">
         <div id="qrCode" class="start-screen__qr"></div>
 
         <div class="start-screen__text">
@@ -28,20 +28,40 @@
     </div>
 
     <div id="mobile-hud" class="mobile-hud hidden">
+
+        <!--STEP 1-->
+        <div class="mobile-hud__rotate-info">
+            Zefix, das Spiel funktioniert nur wenn du dein Smartphone um 90° drehst!
+        </div>
+
+        <!--STEP 2-->
         <button id="mobile-hud-start"
                 class="mobile-hud__start-btn button--mobile-large">
-            Ich bin bereit ☕
+            Ich bin bereit
         </button>
+
+        <!--STEP 3-->
+        <div id="mobile-hud-end-wait"
+             class="mobile-hud__info-wrapper hidden">
+            <div class="mobile-hud__info-text">
+                Leider musst du warten bis sich deine Mitspieler verbunden haben.... <br>
+                Das kann dauernt!
+            </div>
+        </div>
+
+        <!--STEP 4-->
         <button id="mobile-hud-accelerate"
                 class="mobile-hud__accelerate-btn button--mobile-large hidden">
-            ★★★ POWER UP ★★★
+            power up
         </button>
+
+        <!--STEP 5-->
         <div id="mobile-hud-end-wrapper"
              class="mobile-hud__info-wrapper hidden">
             <div id="mobile-hud-end-text" class="mobile-hud__info-text"></div>
             <button onclick="window.location.reload(true);"
                     class="mobile-hud__reload-btn button--mobile-small">
-                Ich will noch einmal ♖
+                Ich will noch einmal
             </button>
         </div>
     </div>

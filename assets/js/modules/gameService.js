@@ -16,6 +16,21 @@ App.GameService = (function (undefined) {
     };
 
     var $window = $(window);
+    
+    var _requestFullScreen = function () {
+        var doc = window.document;
+        var docEl = doc.documentElement;
+
+        var _requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+        var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+        if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+            _requestFullScreen.call(docEl);
+        }
+        else {
+            cancelFullScreen.call(doc);
+        }
+    };
 
     /**
      * Add player and inform clients about player informations
@@ -80,6 +95,7 @@ App.GameService = (function (undefined) {
     var _initHostEvents = function () {
 
         var MAX_AMOUNT = App.Racer.getMaxAmount(), initCallbacks = [];
+        var $keyboardGameButton = $('#keyboard-game');
 
         App.Racer.registerFinishFunction(function (winner) {
             App.Racer.destroy();
@@ -94,7 +110,7 @@ App.GameService = (function (undefined) {
             socket.emit('finish', winner);
         });
 
-        $('#keyboard-game').one('click', _startKeyboardGame);
+        $keyboardGameButton.one('click', _startKeyboardGame);
 
         socket.on('controlData', function (data) {
             App.Racer.updatePlayer(data);
@@ -110,6 +126,7 @@ App.GameService = (function (undefined) {
 
         socket.on('playerConnect', function (amountPlayers) {
             console.log('player connected', amountPlayers);
+            $keyboardGameButton.addClass('hidden');
 
             App.RacerHud.hideWinner();
 
@@ -147,22 +164,23 @@ App.GameService = (function (undefined) {
         var finished = false;
 
         // show mobile hud
-        var $mobileHud = $('#mobile-hud');
+        $('#mobile-hud').removeClass('hidden');
         var $startButton = $('#mobile-hud-start');
+        var $waitScreen = $('#mobile-hud-end-wait');
         var $accelerateButton = $('#mobile-hud-accelerate');
         var $endWrapper = $('#mobile-hud-end-wrapper');
         var $endText = $('#mobile-hud-end-text');
-        $mobileHud.removeClass('hidden');
-
 
         // inform host that player is ready
         $startButton.one('click', function () {
             $startButton.addClass('hidden');
-            $accelerateButton.removeClass('hidden');
+
+            _requestFullScreen();
+            
+            $waitScreen.removeClass('hidden');
 
             socket.emit('playerReady');
         });
-
 
         // add listener for accelerate button
         $accelerateButton.on('click', function () {
@@ -196,7 +214,9 @@ App.GameService = (function (undefined) {
 
         // player data event
         socket.on('newPlayerData', function (data) {
-            document.body.style.backgroundColor = data.color;
+            $('body').css('backgroundColor', data.color);
+            $waitScreen.addClass('hidden');
+            $accelerateButton.removeClass('hidden');
         });
 
         // finish event
