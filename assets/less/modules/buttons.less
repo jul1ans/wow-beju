@@ -7,11 +7,23 @@
     color: black;
     text-transform: uppercase;
     cursor: pointer;
-    background: #ccc;
     border: solid 2px black;
+    transition: all .12s ease;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 
-    &, &:focus {
+    &, &:focus, &:hover {
         outline: none;
+    }
+
+    &, &:focus, &:hover, &:active {
+        background: #ccc;
+    }
+
+    &.mobile-click {
+        background: #888;
     }
 
     &--mobile-large {
@@ -37,7 +49,6 @@ body.no-touch {
     .button {
         border-bottom-width: 4px;
         transform: translateY(0);
-        transition: all .1s ease;
 
         &:hover, &:focus {
             border-bottom-width: 2px;

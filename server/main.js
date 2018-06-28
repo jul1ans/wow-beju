@@ -1,17 +1,20 @@
-var fs = require('fs');
 var express = require('express');
+var ejs = require('ejs');
 var app = express();
 var httpServer = require('http').Server(app);
-var https = require('https');
 var path = require('path');
 var RoomService = require('./modules/roomService.js');
 
-var _certDir = path.resolve('cert');
 var _viewsDir = path.resolve('views');
 var _distDir = path.resolve('dist');
 
+app.set('view engine', 'ejs');
+
 app.get('/', function (req, res) {
-    res.sendFile(_viewsDir + '/index.html');
+    res.render(_viewsDir + '/index.ejs', {
+        // todo: check for development mode or production
+        timestamp: Date.now()
+    });
 });
 
 app.use(
@@ -26,15 +29,6 @@ app.use(
 httpServer.listen(2727, function () {
     console.log('listening on *:2727');
 });
-
-// var httpsServer = https.createServer({
-//     pfx: fs.readFileSync(_certDir + '/dev_ip.pfx'),
-//     passphrase: '123'
-// }, app);
-//
-// httpsServer.listen(2727, function(){
-//     console.log('listening on *:2727');
-// });
 
 var io = require('socket.io')(httpServer);
 

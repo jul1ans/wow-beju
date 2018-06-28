@@ -168,6 +168,7 @@ App.GameService = (function (undefined) {
         var $startButton = $('#mobile-hud-start');
         var $waitScreen = $('#mobile-hud-end-wait');
         var $accelerateButton = $('#mobile-hud-accelerate');
+        var waitForAccelerate = false;
         var $endWrapper = $('#mobile-hud-end-wrapper');
         var $endText = $('#mobile-hud-end-text');
 
@@ -189,16 +190,24 @@ App.GameService = (function (undefined) {
                 return;
             }
 
+            if (waitForAccelerate) return;
+            waitForAccelerate = true;
+            $accelerateButton.addClass('mobile-click');
+
             // emit powerUp event
             socket.emit('controlData', {
                 powerUp: true
             });
+
+            window.setTimeout(function () {
+                $accelerateButton.removeClass('mobile-click');
+                waitForAccelerate = false;
+            }, 100);
         });
 
         // init event listener for device orientation and emit control data to socket
-        $window.on('deviceorientation', function(event) {
+        window.addEventListener('deviceorientation', function(event) {
             if (finished === true) {
-                $window.off('deviceorientation');
                 return;
             }
 
