@@ -150,6 +150,7 @@ var RoomService = (function (undefined) {
         rooms[roomId].host.on('disconnect', function () {
             player.removeAllListeners('disconnect');
             player.removeAllListeners('controlData');
+            player.removeAllListeners('playerReady');
         });
 
         // re-calculate index

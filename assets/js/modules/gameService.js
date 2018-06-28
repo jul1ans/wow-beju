@@ -213,11 +213,13 @@ App.GameService = (function (undefined) {
 
             // todo: calibrate with initial position
 
+            // todo: prevent display turn off
+
             // emit device orientation
             socket.emit('controlData', {
                 tiltLR: parseInt(event.gamma), // Get the left-to-right tilt (in degrees).
                 tiltFB: parseInt(event.beta), // Get the front-to-back tilt (in degrees).
-                direction: parseInt(event.alpha )// Get the direction of the device (in degrees).
+                direction: parseInt(event.alpha)// Get the direction of the device (in degrees).
             });
         });
 
