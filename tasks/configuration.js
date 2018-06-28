@@ -18,6 +18,7 @@ module.exports = merge({
     footerJsFiles: [ // Js files to include in the footer
 
         // node modules
+        nodeModulesPath + '/jquery/dist/jquery.js',
         nodeModulesPath + '/three/build/three.js',
         nodeModulesPath + '/three/build/three.js',
         nodeModulesPath + '/stats-js/build/stats.min.js',

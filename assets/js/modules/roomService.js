@@ -9,7 +9,8 @@ App.RoomService = (function (undefined) {
     var DEFAULT_CONFIG = {
         codeParam: 'code',
         typeParam: 'type',
-        qrElement: document.getElementById("qrCode")
+        qrElement: document.getElementById("qrCode"),
+        $startScreen: $("#startScreen")
     };
 
     var USER_TYPES = {
@@ -112,11 +113,11 @@ App.RoomService = (function (undefined) {
     };
 
     var hideQrCode = function () {
-        DEFAULT_CONFIG.qrElement.style.display = 'none';
+        DEFAULT_CONFIG.$startScreen.addClass('hidden');
     };
 
     var showQrCode = function () {
-        DEFAULT_CONFIG.qrElement.style.display = 'inherit';
+        DEFAULT_CONFIG.$startScreen.removeClass('hidden');
     };
 
     return {

@@ -6,18 +6,18 @@ App.RacerHud = (function (undefined) {
 
     var initCalled = false,
         players = [],
-        containerEl, playersEl, winnerEl;
+        $container, $players, $winner;
 
     var init = function () {
         if (initCalled) return;
         initCalled = true;
-        containerEl = document.getElementById('racer-hud');
-        containerEl.style.display = 'inherit';
-        playersEl = document.getElementById('racer-hud-players');
+        $container = $('#racer-hud');
+        $container.removeClass('hidden');
+        $players = $('#racer-hud-players');
     };
 
     var destroy = function () {
-        playersEl.innerHTML = '';
+        $players.html('');
         players = [];
     };
 
@@ -29,14 +29,10 @@ App.RacerHud = (function (undefined) {
     var addPlayer = function (index, color) {
         init();
 
-        var playerEl = document.createElement('div');
+        var $player = $('<div class="racer-hud__player racer-hud__player--' + index + '" style="color: ' + color + '">');
+        $players.append($player);
 
-        playerEl.classList.add('racer-hud__player');
-        playerEl.classList.add('racer-hud__player--' + index);
-        playerEl.style.color = color;
-
-        playersEl.append(playerEl);
-        players[index] = playerEl;
+        players[index] = $player;
     };
 
     /**
@@ -46,7 +42,7 @@ App.RacerHud = (function (undefined) {
     var addPowerUp = function (index) {
         if (!players.hasOwnProperty(index)) return;
 
-        players[index].append(document.createElement('span'));
+        players[index].append($('<span>'));
     };
 
     /**
@@ -56,7 +52,7 @@ App.RacerHud = (function (undefined) {
     var removePowerUp = function (index) {
         if (!players.hasOwnProperty(index)) return;
 
-        players[index].removeChild(players[index].childNodes[0]);
+        players[index].children().last().remove();
     };
 
     /**
@@ -64,19 +60,18 @@ App.RacerHud = (function (undefined) {
      * @param text
      */
     var showWinner = function (text) {
-        winnerEl = document.createElement('div');
-        winnerEl.classList.add('racer-hud__winner');
-        winnerEl.innerText = text;
+        $winner = $('<div class="racer-hud__winner">');
+        $winner.text(text);
 
-        window.document.body.appendChild(winnerEl);
+        $('body').append($winner);
 
         window.setTimeout(hideWinner, 5000);
     };
 
     var hideWinner = function () {
-        if (winnerEl === undefined) return;
-        window.document.body.removeChild(winnerEl);
-        winnerEl = undefined;
+        if ($winner === undefined) return;
+        $winner.remove();
+        $winner = undefined;
     };
 
     return {

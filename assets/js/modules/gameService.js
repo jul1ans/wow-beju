@@ -9,7 +9,13 @@ App.GameService = (function (undefined) {
         FINISH: 'finish'
     };
 
-    var USE_KEYBOARD = true;
+    var TEXT = {
+        draw: 'Unentschieden',
+        winner: function (winner) {return 'Der Spieler #' + winner + ' hat gewonnen';},
+        notSupportedDevice: 'Ihr Gerät wird nicht unterstützt'
+    };
+
+    var $window = $(window);
 
     /**
      * Add player and inform clients about player informations
@@ -20,6 +26,51 @@ App.GameService = (function (undefined) {
         var playerData = App.Racer.addPlayer();
 
         socket.emit('newPlayerData', playerData);
+    };
+
+    /**
+     * Start game with keyobard control
+     * @private
+     */
+    var _startKeyboardGame = function () {
+        App.Racer.init();
+        App.Racer.addPlayer();
+        App.Racer.addPlayer();
+        App.RoomService.hideQrCode();
+
+        $window.on('keydown', function (e) {
+            if (e.key === 'ArrowLeft') {
+                App.Racer.updatePlayer({
+                    playerIndex: 1,
+                    tiltFB: -150
+                });
+            } else if (e.key === 'ArrowRight') {
+                App.Racer.updatePlayer({
+                    playerIndex: 1,
+                    tiltFB: 150
+                });
+            } else if (e.key === 'ArrowUp') {
+                App.Racer.updatePlayer({
+                    playerIndex: 1,
+                    powerUp: true
+                });
+            } else if (e.key === 'a') {
+                App.Racer.updatePlayer({
+                    playerIndex: 0,
+                    tiltFB: -150
+                });
+            } else if (e.key === 'd') {
+                App.Racer.updatePlayer({
+                    playerIndex: 0,
+                    tiltFB: 150
+                });
+            } else if (e.key === 's') {
+                App.Racer.updatePlayer({
+                    playerIndex: 0,
+                    powerUp: true
+                });
+            }
+        });
     };
 
     /**
@@ -35,91 +86,51 @@ App.GameService = (function (undefined) {
             App.RoomService.showQrCode();
 
             if (winner === 0) {
-                App.RacerHud.showWinner('FINISHED - no winner');
+                App.RacerHud.showWinner(TEXT.draw);
             } else {
-                App.RacerHud.showWinner('FINISHED - player ' + winner + ' has won');
+                App.RacerHud.showWinner(TEXT.winner(winner));
             }
 
             socket.emit('finish', winner);
         });
 
-        if (USE_KEYBOARD) {
-            App.Racer.init();
-            App.Racer.addPlayer();
-            App.Racer.addPlayer();
-            App.RoomService.hideQrCode();
+        $('#keyboard-game').one('click', _startKeyboardGame);
 
-            window.addEventListener('keydown', function (e) {
-                if (e.key === 'ArrowLeft') {
-                    App.Racer.updatePlayer({
-                        playerIndex: 1,
-                        tiltFB: -150
-                    });
-                } else if (e.key === 'ArrowRight') {
-                    App.Racer.updatePlayer({
-                        playerIndex: 1,
-                        tiltFB: 150
-                    });
-                } else if (e.key === 'ArrowUp') {
-                    App.Racer.updatePlayer({
-                        playerIndex: 1,
-                        powerUp: true
-                    });
-                } else if (e.key === 'a') {
-                    App.Racer.updatePlayer({
-                        playerIndex: 0,
-                        tiltFB: -150
-                    });
-                } else if (e.key === 'd') {
-                    App.Racer.updatePlayer({
-                        playerIndex: 0,
-                        tiltFB: 150
-                    });
-                } else if (e.key === 's') {
-                    App.Racer.updatePlayer({
-                        playerIndex: 0,
-                        powerUp: true
-                    });
+        socket.on('controlData', function (data) {
+            App.Racer.updatePlayer(data);
+        });
+
+        socket.on('playerReady', function () {
+            if (App.Racer.isDestroyed()) {
+                initCallbacks.push(_addPlayer.bind(this, socket));
+            } else {
+                _addPlayer(socket);
+            }
+        });
+
+        socket.on('playerConnect', function (amountPlayers) {
+            console.log('player connected', amountPlayers);
+
+            App.RacerHud.hideWinner();
+
+            if (amountPlayers === MAX_AMOUNT) {
+                App.RoomService.hideQrCode();
+
+                // init game
+                App.Racer.init();
+
+                for (var i = 0; i < initCallbacks.length; i++) {
+                    initCallbacks[i]();
                 }
-            });
-        } else {
 
-            socket.on('controlData', function (data) {
-                App.Racer.updatePlayer(data);
-            });
+                initCallbacks = [];
+            }
+        });
 
-            socket.on('playerReady', function () {
-                if (App.Racer.isDestroyed()) {
-                    initCallbacks.push(_addPlayer.bind(this, socket));
-                } else {
-                    _addPlayer(socket);
-                }
-            });
-
-            socket.on('playerConnect', function (amountPlayers) {
-                console.log('player connected', amountPlayers);
-
-                App.RacerHud.hideWinner();
-
-                if (amountPlayers === MAX_AMOUNT) {
-                    App.RoomService.hideQrCode();
-
-                    // init game
-                    App.Racer.init();
-
-                    for (var i = 0; i < initCallbacks.length; i++) {
-                        initCallbacks[i]();
-                    }
-
-                    initCallbacks = [];
-                }
-            });
-
-            socket.on('playerDisconnect', function () {
-                App.Racer.destroy();
-                App.RoomService.showQrCode();
-            });
-        }
+        socket.on('playerDisconnect', function () {
+            App.Racer.destroy();
+            App.RoomService.showQrCode();
+        });
     };
 
     /**
@@ -129,33 +140,34 @@ App.GameService = (function (undefined) {
     var _initPlayerControl = function () {
         // check if device supports orientation events
         if (!window.DeviceOrientationEvent) {
-            alert('device not supported');
+            alert(TEXT.notSupportedDevice);
             return;
         }
 
         var finished = false;
 
         // show mobile hud
-        var mobileHud = document.getElementById('mobile-hud');
-        var startButton = document.getElementById('mobile-hud-start');
-        var accelerateButton = document.getElementById('mobile-hud-accelerate');
-        var endWrapper = document.getElementById('mobile-hud-end-wrapper');
-        var endText = document.getElementById('mobile-hud-end-text');
-        mobileHud.style.display = 'inherit';
+        var $mobileHud = $('#mobile-hud');
+        var $startButton = $('#mobile-hud-start');
+        var $accelerateButton = $('#mobile-hud-accelerate');
+        var $endWrapper = $('#mobile-hud-end-wrapper');
+        var $endText = $('#mobile-hud-end-text');
+        $mobileHud.removeClass('hidden');
 
 
         // inform host that player is ready
-        startButton.addEventListener('click', function () {
-            startButton.style.display = 'none';
-            accelerateButton.style.display = 'inherit';
+        $startButton.one('click', function () {
+            $startButton.addClass('hidden');
+            $accelerateButton.removeClass('hidden');
 
             socket.emit('playerReady');
         });
 
 
         // add listener for accelerate button
-        accelerateButton.addEventListener('click', function () {
+        $accelerateButton.on('click', function () {
             if (finished === true) {
+                $accelerateButton.off('click');
                 return;
             }
 
@@ -166,8 +178,9 @@ App.GameService = (function (undefined) {
         });
 
         // init event listener for device orientation and emit control data to socket
-        window.addEventListener('deviceorientation', function(event) {
+        $window.on('deviceorientation', function(event) {
             if (finished === true) {
+                $window.off('deviceorientation');
                 return;
             }
 
@@ -189,13 +202,13 @@ App.GameService = (function (undefined) {
         // finish event
         socket.on('finish', function (winner) {
             finished = true;
-            endWrapper.style.display = 'inherit';
-            accelerateButton.style.display = 'none';
+            $endWrapper.removeClass('hidden');
+            $accelerateButton.addClass('hidden');
 
             if (winner === 0) {
-                endText.innerText = 'Oh no, there is no winner';
+                $endText.text(TEXT.draw);
             } else {
-                endText.innerText = 'The winner is player #' + winner;
+                $endText.text(TEXT.winner(winner));
             }
         });
     };

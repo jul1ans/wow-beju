@@ -11,32 +11,37 @@
 </head>
 <body>
 
-    <div id="qrCode"></div>
+    <div id="startScreen" class="start-screen">
+        <div id="qrCode" class="start-screen__qr"></div>
 
-    <!--<div class="oindi" id="tilt"></div>-->
-    <!--<div class="oindi" id="direction"></div>-->
+        <div class="start-screen__text">
+            Code scannen und los gehts!
+        </div>
 
-    <div id="racer-hud" class="racer-hud" style="display: none;">
+        <button id="keyboard-game" class="start-screen__start button--desktop-small">
+            Tastatur verwenden
+        </button>
+    </div>
+
+    <div id="racer-hud" class="racer-hud hidden">
         <div id="racer-hud-players" class="racer-hud__players"></div>
     </div>
 
-    <div id="mobile-hud" class="mobile-hud" style="display: none;">
+    <div id="mobile-hud" class="mobile-hud hidden">
         <button id="mobile-hud-start"
-                class="mobile-hud__start-btn">
-            start game
+                class="mobile-hud__start-btn button--mobile-large">
+            Ich bin bereit ☕
         </button>
         <button id="mobile-hud-accelerate"
-                class="mobile-hud__accelerate-btn"
-                style="display: none;">
-            use power up
+                class="mobile-hud__accelerate-btn button--mobile-large hidden">
+            ★★★ POWER UP ★★★
         </button>
         <div id="mobile-hud-end-wrapper"
-             class="mobile-hud__info-wrapper"
-             style="display: none;">
+             class="mobile-hud__info-wrapper hidden">
             <div id="mobile-hud-end-text" class="mobile-hud__info-text"></div>
             <button onclick="window.location.reload(true);"
-                    class="mobile-hud__reload-btn">
-                restart
+                    class="mobile-hud__reload-btn button--mobile-small">
+                Ich will noch einmal ♖
             </button>
         </div>
     </div>

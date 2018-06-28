@@ -30,6 +30,7 @@
     "grunt-serve": "^0.1.6",
     "grunt-shell": "^2.1.0",
     "grunt-timer": "^0.6.0",
+    "jquery": "^3.3.1",
     "less-plugin-autoprefix": "~1.5.1",
     "load-grunt-tasks": "~3.5.2",
     "merge": "^1.2.0",
