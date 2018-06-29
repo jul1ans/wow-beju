@@ -100,6 +100,8 @@ App.GameService = (function (undefined) {
         App.Racer.registerFinishFunction(function (winner) {
             App.Racer.destroy();
             App.RoomService.showQrCode();
+            $keyboardGameButton.removeClass('hidden');
+            $keyboardGameButton.one('click', _startKeyboardGame);
 
             if (winner === 0) {
                 App.RacerHud.showWinner(TEXT.draw);

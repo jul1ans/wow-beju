@@ -49,7 +49,7 @@ App.Racer = (function (undefined) {
                 15,
                 -15
             ],
-            MAX_AMOUNT: 1,
+            MAX_AMOUNT: 2,
             SIZE: 5,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
