@@ -251,7 +251,7 @@ App.GameService = (function (undefined) {
         userType = App.RoomService.getUserType();
         socket = App.RoomService.getSocket();
 
-        console.log(userType);
+        console.log('user type:', userType);
 
         if (userType === App.RoomService.USER_TYPES.HOST) {
             _initHostEvents();

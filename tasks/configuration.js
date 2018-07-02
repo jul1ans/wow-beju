@@ -20,7 +20,7 @@ module.exports = merge({
         // node modules
         nodeModulesPath + '/jquery/dist/jquery.js',
         nodeModulesPath + '/three/build/three.js',
-        nodeModulesPath + '/three/build/three.js',
+        nodeModulesPath + '/three/examples/js/loaders/ColladaLoader.js',
         nodeModulesPath + '/stats-js/build/stats.min.js',
 
         // vendor files

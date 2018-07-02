@@ -4,8 +4,7 @@ var App = App || {};
 
 App.Racer = (function (undefined) {
 
-
-    var renderer, scene, camera, dirLight, stats, animation, finishFunction,
+    var renderer, scene, camera, dirLight, stats, animation, finishFunction, colladaLoader,
         players = [], barriers = [], powerUps = [],
         finished = false, gameStarted = false, destroyed = true;
 
@@ -49,8 +48,9 @@ App.Racer = (function (undefined) {
                 15,
                 -15
             ],
+            DRONE_OBJECT: '/public/objects/drone.dae',
             MAX_AMOUNT: 2,
-            SIZE: 5,
+            SIZE: 7,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
             QUICK_TURN_SCALE_FACTOR: 1.5,
@@ -71,6 +71,47 @@ App.Racer = (function (undefined) {
     var WORLD_WIDTH = Math.abs(SETTINGS.WORLD.LEFT - SETTINGS.WORLD.RIGHT);
     var SAVE_END = SETTINGS.WORLD.END - SETTINGS.WORLD.SAVE_AREA.END;
     var SAVE_START = SETTINGS.WORLD.START + SETTINGS.WORLD.SAVE_AREA.START;
+
+
+    var _doForEachChild = function (object, cb, additionalParam) {
+        for (var i in object.children) {
+            if (!object.children.hasOwnProperty(i)) continue;
+            cb(object.children[i], additionalParam);
+        }
+    };
+
+    /**
+     * Activate shadow for each children
+     * @param object
+     * @private
+     */
+    var _activateShadowForChildren = function (object) {
+
+        // ignore following elements
+        if (object.name === 'Camera') return;
+
+        object.castShadow = true;
+        object.receiveShadow = true;
+
+        if (!object.children || object.children.length === 0) return;
+
+        _doForEachChild(object, _activateShadowForChildren);
+    };
+
+    /**
+     * Get all children
+     * @param object
+     * @param {{name: string, objectArray: *[]}} config
+     * @private
+     */
+    var _findChildrenObjectsByName = function (object, config) {
+
+        if (object.name === config.name) {
+            config.objectArray.push(object);
+        }
+
+        _doForEachChild(object, _findChildrenObjectsByName, config);
+    };
 
     /**
      * Box class which creates a new barrier object
@@ -145,31 +186,89 @@ App.Racer = (function (undefined) {
      */
     var Player = function (index, color, x) {
         this.index = index;
-        this.geometry = new THREE.BoxGeometry(
-            SETTINGS.PLAYER.SIZE,
-            SETTINGS.PLAYER.SIZE,
-            SETTINGS.PLAYER.SIZE
-        );
 
+        this.ready = false;
         this.color = color;
-
-        this.material = new THREE.MeshPhongMaterial({
-            color: color,
-            emissive: 0xffffff,
-            emissiveIntensity: 0.1,
-            beta: 0,
-            shininess: 0.4
-        });
-
-        this.object = new THREE.Mesh(this.geometry, this.material);
-        this.object.receiveShadow = true;
-        this.object.castShadow = true;
-        this.object.position.set(x, SETTINGS.PLAYER.SIZE / 1.2, 0);
         this.currentTurn = 0;
         this.currentSpeed = 0; // value between 0 - 1
         this.powerUps = 0; // amount of power ups (for acceleration)
 
-        scene.add(this.object);
+        colladaLoader.load(SETTINGS.PLAYER.DRONE_OBJECT, function (collada) {
+            this.object = collada.scene;
+            this.object.position.set(x, SETTINGS.PLAYER.SIZE / 2, 0);
+            _activateShadowForChildren(this.object);
+
+
+            // find all blades
+            this.blades = [];
+            _findChildrenObjectsByName(this.object, {
+                objectArray: this.blades,
+                name: 'Propeller'
+            });
+
+            // find top (colored area)
+            var topElements = [];
+            _findChildrenObjectsByName(this.object, {
+                objectArray: topElements,
+                name: 'Top'
+            });
+            this.top = topElements[0];
+
+            if (this.top === undefined) return;
+
+            // set color
+            this.top.material.color.set(this.color);
+
+
+            var box = new THREE.Box3().setFromObject(this.object);
+
+            this.size = {
+                x: box.max.x - box.min.x,
+                y: box.max.y - box.min.y,
+                z: box.max.z - box.min.z
+            };
+
+            console.log(this.object, this.size);
+
+            var scaleFactor = SETTINGS.PLAYER.SIZE / this.size.x;
+
+            this.object.scale.x *= scaleFactor;
+            this.object.scale.y *= scaleFactor;
+            this.object.scale.z *= scaleFactor;
+
+            scene.add(this.object);
+
+            this.ready = true;
+            this._animate();
+        }.bind(this));
+    };
+
+    /**
+     * Animate drone (blade movement, up- / down-movement
+     * @private
+     */
+    Player.prototype._animate = function () {
+
+        // move blades
+        for (var i in this.blades) {
+            this.blades[i].rotation.y += 0.5;
+        }
+
+        // move up and down
+        if (this.moveUp === true) {
+            this.object.position.y += 0.005;
+        } else {
+            this.object.position.y -= 0.005;
+        }
+
+        // calculate move up / down
+        if (this.object.position.y < SETTINGS.PLAYER.SIZE / 2 - 0.3) {
+            this.moveUp = true;
+        } else if (this.object.position.y > SETTINGS.PLAYER.SIZE / 2 + 0.3) {
+            this.moveUp = false;
+        }
+
+        window.requestAnimationFrame(this._animate.bind(this));
     };
 
     /**
@@ -304,6 +403,8 @@ App.Racer = (function (undefined) {
         for (var p in players) {
             if (players[p] === this) continue;
 
+            // todo: add sparkling effect on collision, see: https://stemkoski.github.io/Three.js/Particles.html
+
             if (_checkCollision(this.boxSize, players[p].boxSize)) {
                 if (this.object.position.x <= players[p].object.position.x) {
                     this.turn(Math.abs(this.currentTurn) * SETTINGS.PLAYER.PLAYER_COLLISION_FORCE);
@@ -384,6 +485,9 @@ App.Racer = (function (undefined) {
 
         for (var pIndex in players) {
             var currentPlayer = players[pIndex];
+
+            if (!currentPlayer.ready) return;
+
             var currentPlayerZValue = currentPlayer.move();
 
             // set min value
@@ -532,6 +636,14 @@ App.Racer = (function (undefined) {
      */
     var _startRace = function () {
 
+        for (var i in players) {
+            // check until all players are ready
+            if (!players[i].ready) {
+                window.requestAnimationFrame(_startRace);
+                return;
+            }
+        }
+
         console.log('GAME STARTS IN ' + SETTINGS.WORLD.START_TIMEOUT / 1000 + 'SECONDS');
 
         window.setTimeout(function () {
@@ -640,6 +752,9 @@ App.Racer = (function (undefined) {
         document.body.appendChild(renderer.domElement);
 
         window.addEventListener('resize', _windowResize, false);
+
+        // init collada loader (for objects)
+        colladaLoader = new THREE.ColladaLoader();
 
         // add light
         var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.8);
