@@ -7,6 +7,7 @@ var RoomService = require('./modules/roomService.js');
 
 var _viewsDir = path.resolve('views');
 var _distDir = path.resolve('dist');
+var _publicDir = path.resolve('public');
 
 app.set('view engine', 'ejs');
 
@@ -22,6 +23,17 @@ app.use(
     express.static(
         _distDir,
         // {maxAge: 30 * 24 * 60 * 60}
+        // todo: check for development
+        {maxAge: 1}
+    )
+);
+
+app.use(
+    '/public',
+    express.static(
+        _publicDir,
+        // {maxAge: 30 * 24 * 60 * 60}
+        // todo: check for development
         {maxAge: 1}
     )
 );
