@@ -193,6 +193,7 @@ App.Racer = (function (undefined) {
         this.currentSpeed = 0; // value between 0 - 1
         this.powerUps = 0; // amount of power ups (for acceleration)
 
+
         colladaLoader.load(SETTINGS.PLAYER.DRONE_OBJECT, function (collada) {
             this.object = collada.scene;
             this.object.position.set(x, SETTINGS.PLAYER.SIZE / 2, 0);
@@ -230,7 +231,7 @@ App.Racer = (function (undefined) {
 
             console.log(this.object, this.size);
 
-            var scaleFactor = SETTINGS.PLAYER.SIZE / this.size.x;
+            var scaleFactor = SETTINGS.PLAYER.SIZE / this.size.x + (SETTINGS.PLAYER.SIZE * 0.05);
 
             this.object.scale.x *= scaleFactor;
             this.object.scale.y *= scaleFactor;
@@ -441,7 +442,7 @@ App.Racer = (function (undefined) {
                 // collision Z
                 (boxSizeA.z1 <= boxSizeB.z1 && boxSizeA.z2 >= boxSizeB.z1) ||
                 (boxSizeA.z1 <= boxSizeB.z2 && boxSizeA.z2 >= boxSizeB.z2)
-            ) && (last || _checkCollision(boxSizeB, boxSizeA, true));
+            ) || (!last && _checkCollision(boxSizeB, boxSizeA, true));
     };
 
     var _windowResize = function () {

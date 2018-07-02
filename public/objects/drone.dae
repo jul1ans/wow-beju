@@ -4,8 +4,8 @@
         <contributor>
             <authoring_tool>CINEMA4D 19.053 COLLADA Exporter</authoring_tool>
         </contributor>
-        <created>2018-07-02T12:57:18Z</created>
-        <modified>2018-07-02T12:57:18Z</modified>
+        <created>2018-07-02T15:13:04Z</created>
+        <modified>2018-07-02T15:13:04Z</modified>
         <unit meter="0.01" name="centimeter"/>
         <up_axis>Y_UP</up_axis>
     </asset>
@@ -387,7 +387,7 @@
         </effect>
     </library_effects>
     <library_materials>
-        <material id="ID1" name="Chrome">
+        <material id="ID1" name="Chrome_1">
             <instance_effect url="#ID2"/>
         </material>
         <material id="ID3" name="Luminance">
@@ -3430,7 +3430,7 @@
     <library_visual_scenes>
         <visual_scene id="ID49">
             <node id="ID50" name="Drone">
-                <translate sid="translate">-165.797 20 -71.7346</translate>
+                <translate sid="translate">0 0 -0</translate>
                 <rotate sid="rotateY">0 1 0 -0</rotate>
                 <rotate sid="rotateX">1 0 0 0</rotate>
                 <rotate sid="rotateZ">0 0 1 -0</rotate>
