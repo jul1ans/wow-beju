@@ -30,8 +30,8 @@ App.Racer = (function (undefined) {
             START: -30,
             END: 7000,
             HEIGHT: 30,
-            BARRIERS: 400,
-            POWER_UPS: 50,
+            BARRIERS: 200,
+            POWER_UPS: 30,
             SAVE_AREA: {
                 START: 100,
                 END: 50
@@ -118,23 +118,26 @@ App.Racer = (function (undefined) {
      * @param x
      * @param y
      * @param z
-     * @param width
-     * @param height
-     * @param depth
+     * @param size
      * @param material
+     * @param geometryType
      * @constructor
      */
-    var Box = function (x, y, z, width, height, depth, material) {
-        this.geometry = new THREE.BoxGeometry(width, height, depth);
+    var Box = function (x, y, z, size, material, geometryType) {
+
+        var radius = size / 2;
+
+        this.geometry = new geometryType(radius * 1.2);
+
         this.material = material;
 
         this.boxSize = {
-            x1: x - (width / 2),
-            x2: x + (width / 2),
-            y1: y - (height / 2),
-            y2: y + (height / 2),
-            z1: z - (depth / 2),
-            z2: z + (depth / 2)
+            x1: x - (radius),
+            x2: x + (radius),
+            y1: y - (radius),
+            y2: y + (radius),
+            z1: z - (radius),
+            z2: z + (radius)
         };
 
         this.destroyed = false;
@@ -146,19 +149,31 @@ App.Racer = (function (undefined) {
     };
 
     /**
+     * Animate box
+     */
+    Box.prototype.animate = function () {
+        if (this.object.z < camera.position.x) return;
+
+        // hide box
+        if (this.destroyed && this.object.scale.x > 0.01) {
+            this.object.scale.y -= 0.1;
+            this.object.scale.x -= 0.1;
+            this.object.scale.z -= 0.1;
+        }
+
+        // rotate box
+        if (this.object.scale.x > 0.01) {
+            this.object.rotation.y += 0.02;
+        }
+    };
+
+    /**
      * Destroy object
      * -> reduce y value until object is hidden
      * -> set destroyed if element fully disappeared
      */
     Box.prototype.destroy = function () {
-
         this.destroyed = true;
-
-        if (this.object.position.y > -4) {
-            this.object.position.y -= 0.2;
-
-            window.requestAnimationFrame(this.destroy.bind(this));
-        }
     };
 
     /**
@@ -229,8 +244,6 @@ App.Racer = (function (undefined) {
                 z: box.max.z - box.min.z
             };
 
-            console.log(this.object, this.size);
-
             var scaleFactor = SETTINGS.PLAYER.SIZE / this.size.x + (SETTINGS.PLAYER.SIZE * 0.05);
 
             this.object.scale.x *= scaleFactor;
@@ -240,15 +253,13 @@ App.Racer = (function (undefined) {
             scene.add(this.object);
 
             this.ready = true;
-            this._animate();
         }.bind(this));
     };
 
     /**
      * Animate drone (blade movement, up- / down-movement
-     * @private
      */
-    Player.prototype._animate = function () {
+    Player.prototype.animate = function () {
 
         // move blades
         for (var i in this.blades) {
@@ -268,8 +279,6 @@ App.Racer = (function (undefined) {
         } else if (this.object.position.y > SETTINGS.PLAYER.SIZE / 2 + 0.3) {
             this.moveUp = false;
         }
-
-        window.requestAnimationFrame(this._animate.bind(this));
     };
 
     /**
@@ -356,6 +365,7 @@ App.Racer = (function (undefined) {
             this.object.position.x -= SETTINGS.PLAYER.SPEED_X * this.currentTurn;
 
         this.checkCollision();
+        this.animate();
 
         return this.object.position.z;
     };
@@ -484,6 +494,7 @@ App.Racer = (function (undefined) {
     var _movePlayer = function () {
         var minZ, maxZ;
 
+        // move player
         for (var pIndex in players) {
             var currentPlayer = players[pIndex];
 
@@ -502,6 +513,19 @@ App.Racer = (function (undefined) {
             }
         }
 
+        // todo: optimize barriers and power up calculation
+        // todo: check all barriers and powerUps iterations and calculate remove old barriers and only calculate until barrier is visible
+
+        // animate barriers
+        for (var bIndex in barriers) {
+            barriers[bIndex].animate();
+        }
+
+        // animate power ups
+        for (var powerIndex in powerUps) {
+            powerUps[powerIndex].animate();
+        }
+
         if (maxZ > SETTINGS.WORLD.END ||
             (maxZ - minZ) > SETTINGS.WORLD.MAX_DISTANCE_BETWEEN_PLAYERS) {
             _finishGame();
@@ -518,22 +542,22 @@ App.Racer = (function (undefined) {
      * @param spaceBetween
      * @param amounts
      * @param boxArray
+     * @param geometryType
      * @private
      */
-    var _addBoxes = function (material, spaceBetween, amounts, boxArray) {
+    var _addBoxes = function (material, spaceBetween, amounts, boxArray, geometryType) {
 
         var boxSize = 4;
         var y = 2;
+        var worldWidth = WORLD_WIDTH - boxSize;
 
         for (var i = 0; i < amounts; i++) {
 
-            var x = Math.floor(Math.random() * WORLD_WIDTH) - WORLD_WIDTH / 2;
+            var x = Math.floor(Math.random() * worldWidth) - worldWidth / 2;
             var z = i * spaceBetween + (Math.floor(Math.random() * spaceBetween) / spaceBetween - spaceBetween / 2);
 
             // don't position barriers on start and end
             if (z > SAVE_END || z < SAVE_START) continue;
-
-            // todo: check if x collide with wall
 
             boxArray.push(new Box(
                 // 0,
@@ -541,9 +565,8 @@ App.Racer = (function (undefined) {
                 y + (Math.floor(Math.random() * 100) / 5 - 4) / 10,
                 z,
                 boxSize,
-                boxSize,
-                boxSize,
-                material
+                material,
+                geometryType
             ));
         }
     };
@@ -554,13 +577,13 @@ App.Racer = (function (undefined) {
      */
     var _addBarriers = function () {
         _addBoxes(new THREE.MeshPhongMaterial({
-            color: 0x0212cc,
+            color: 0x101015,
             emissive: 0xffffff,
             emissiveIntensity: 0.01,
             beta: 0,
-            shininess: 0.1
+            shininess: 0.2
         }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.BARRIERS,
-            SETTINGS.WORLD.BARRIERS, barriers);
+            SETTINGS.WORLD.BARRIERS, barriers, THREE.DodecahedronBufferGeometry);
     };
 
     /**
@@ -569,13 +592,13 @@ App.Racer = (function (undefined) {
      */
     var _addPowerUps = function () {
         _addBoxes(new THREE.MeshPhongMaterial({
-            color: 0x2ef72e,
+            color: 0xfcfafa,
             emissive: 0xffffff,
             emissiveIntensity: 0.01,
             beta: 0,
             shininess: 0.1
         }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.POWER_UPS,
-            SETTINGS.WORLD.POWER_UPS, powerUps);
+            SETTINGS.WORLD.POWER_UPS, powerUps, THREE.OctahedronBufferGeometry);
     };
 
     /**
