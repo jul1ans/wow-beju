@@ -19,7 +19,7 @@ module.exports = merge({
 
         // node modules
         nodeModulesPath + '/jquery/dist/jquery.js',
-        nodeModulesPath + '/three/build/three.js',
+        nodeModulesPath + '/nosleep.js/dist/NoSleep.js',
         nodeModulesPath + '/three/build/three.js',
         nodeModulesPath + '/stats-js/build/stats.min.js',
 

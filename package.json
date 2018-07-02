@@ -35,6 +35,7 @@
     "load-grunt-tasks": "~3.5.2",
     "merge": "^1.2.0",
     "nodemon": "^1.17.3",
+    "nosleep.js": "^0.7.0",
     "stats-js": "^1.0.0-alpha1",
     "three": "^0.93.0",
     "tracking": "^1.1.3"
