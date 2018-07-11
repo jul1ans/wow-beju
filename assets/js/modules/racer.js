@@ -64,7 +64,7 @@ App.Racer = (function (undefined) {
             MIN_TURN: -0.5,
             MAX_TURN: 0.5,
             SPEED_X: 0.7,
-            SPEED_Z: 5,
+            SPEED_Z: 1,
             PLAYER_COLLISION_FORCE: 0.3,
             BARRIER_COLLISION_VALUE: 0.15,
             MIN_SPEED: 0.3, // minimal player speed
