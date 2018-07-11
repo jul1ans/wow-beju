@@ -8,10 +8,12 @@
     "start": "nodemon --watch 'views/**/*.html' --exec node server/main.js",
     "forever": "forever start server/main.js",
     "restart": "forever restart server/main.js",
-    "stop": "forever stop server/main.js",
-    "heroku": "npm install && grunt build && npm start"
+    "stop": "forever stop server/main.js"
   },
-  "main": "",
+  "main": "server/main.js",
+  "engines": {
+    "node": "8.11.3"
+  },
   "keywords": [],
   "devDependencies": {
     "aframe": "^0.8.2",
