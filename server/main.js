@@ -40,8 +40,10 @@ app.use(
     )
 );
 
-httpServer.listen(process.env.PORT || 8080, function () {
-    console.log('START SERVER');
+var port = process.env.PORT || 2727;
+
+httpServer.listen(port, function () {
+    console.log('START SERVER - listen: ' + port);
 });
 
 RoomService.init(io);
