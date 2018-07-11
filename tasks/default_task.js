@@ -1,7 +1,6 @@
 module.exports = function(grunt) {
 	grunt.registerTask(
 		'build', [
-			'install',
 			'clean:initial',
 			'jshint:production',
 			'less',
@@ -23,7 +22,4 @@ module.exports = function(grunt) {
 			'concurrent:watch'
 		]
 	);
-
-
-	grunt.registerTask('install', ['shell:bowerPrune', 'shell:bowerInstall']);
 };

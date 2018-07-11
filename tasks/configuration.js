@@ -49,7 +49,9 @@ module.exports = merge({
             '$': true,
             'window': true,
             'document': true,
-            'App': true
+            'App': true,
+            'alert': true,
+            'console': true
         }
     }
 }, configurationLocal);

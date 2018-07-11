@@ -9,7 +9,7 @@
     "forever": "forever start server/main.js",
     "restart": "forever restart server/main.js",
     "stop": "forever stop server/main.js",
-    "heroku": "npm install && npm start"
+    "heroku": "npm install && grunt build && npm start"
   },
   "main": "",
   "keywords": [],
