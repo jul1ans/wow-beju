@@ -9,6 +9,7 @@ var RoomService = require('./modules/roomService.js');
 var _viewsDir = path.resolve('views');
 var _distDir = path.resolve('dist');
 var _publicDir = path.resolve('public');
+var io = require('socket.io')(httpServer);
 
 app.set('view engine', 'ejs');
 
@@ -39,11 +40,9 @@ app.use(
     )
 );
 
-httpServer.listen(2727, function () {
-    console.log('listening on *:2727');
+httpServer.listen(process.env.PORT || 8080, function () {
+    console.log('START SERVER');
 });
-
-var io = require('socket.io')(httpServer);
 
 RoomService.init(io);
 
