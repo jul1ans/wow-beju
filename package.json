@@ -8,7 +8,8 @@
     "start": "nodemon --watch 'views/**/*.html' --exec node server/main.js",
     "forever": "forever start server/main.js",
     "restart": "forever restart server/main.js",
-    "stop": "forever stop server/main.js"
+    "stop": "forever stop server/main.js",
+    "heroku": "grunt build && node server/main.js"
   },
   "main": "server/main.js",
   "engines": {
