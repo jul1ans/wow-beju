@@ -1,6 +1,7 @@
 var express = require('express');
 var ejs = require('ejs');
 var app = express();
+var http = require("http");
 var httpServer = require('http').Server(app);
 var path = require('path');
 var RoomService = require('./modules/roomService.js');
@@ -45,4 +46,8 @@ httpServer.listen(2727, function () {
 var io = require('socket.io')(httpServer);
 
 RoomService.init(io);
+
+// setInterval(function() {
+//     http.get("http://<your app name>.herokuapp.com");
+// }, 300000); // every 5 minutes (300000)
 

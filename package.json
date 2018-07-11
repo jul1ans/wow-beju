@@ -8,7 +8,8 @@
     "start": "nodemon --watch 'views/**/*.html' --exec node server/main.js",
     "forever": "forever start server/main.js",
     "restart": "forever restart server/main.js",
-    "stop": "forever stop server/main.js"
+    "stop": "forever stop server/main.js",
+    "heroku": "npm install && npm start"
   },
   "main": "",
   "keywords": [],
@@ -36,7 +37,6 @@
     "merge": "^1.2.0",
     "nodemon": "^1.17.3",
     "nosleep.js": "^0.7.0",
-    "stats-js": "^1.0.0-alpha1",
     "three": "^0.93.0",
     "tracking": "^1.1.3"
   },

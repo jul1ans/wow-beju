@@ -5,14 +5,13 @@ var App = App || {};
 App.GameService = (function (undefined) {
 
     var userType, socket;
-    var HOST_EVENTS = {
-        FINISH: 'finish'
-    };
 
     var TEXT = {
         draw: 'Unentschieden',
-        winner: function (winner) {return 'Der Spieler #' + winner + ' hat gewonnen';},
-        notSupportedDevice: 'Ihr Gerät wird nicht unterstützt'
+        winner: 'Juhu, du hast gewonnen!',
+        looser: 'Oh nein, du hast verloren',
+        notSupportedDevice: 'Dein Gerät wird nicht unterstützt',
+        winnerIs: function (winner) {return 'Spieler #' + winner + ' hat gewonnen!';}
     };
 
     var $window = $(window);
@@ -106,7 +105,7 @@ App.GameService = (function (undefined) {
             if (winner === 0) {
                 App.RacerHud.showWinner(TEXT.draw);
             } else {
-                App.RacerHud.showWinner(TEXT.winner(winner));
+                App.RacerHud.showWinner(TEXT.winnerIs(winner));
             }
 
             socket.emit('finish', winner);
@@ -163,7 +162,7 @@ App.GameService = (function (undefined) {
             return;
         }
 
-        var finished = false;
+        var finished = false, playerIndex = -1;
 
         // show mobile hud
         $('#mobile-hud').removeClass('hidden');
@@ -213,10 +212,6 @@ App.GameService = (function (undefined) {
                 return;
             }
 
-            // todo: calibrate with initial position
-
-            // todo: prevent display turn off
-
             // emit device orientation
             socket.emit('controlData', {
                 tiltLR: parseInt(event.gamma), // Get the left-to-right tilt (in degrees).
@@ -230,6 +225,7 @@ App.GameService = (function (undefined) {
             $('body').css('backgroundColor', data.color);
             $waitScreen.addClass('hidden');
             $accelerateButton.removeClass('hidden');
+            playerIndex = data.index;
         });
 
         // finish event
@@ -240,8 +236,10 @@ App.GameService = (function (undefined) {
 
             if (winner === 0) {
                 $endText.text(TEXT.draw);
+            } else if (winner - 1 === playerIndex) {
+                $endText.text(TEXT.winner);
             } else {
-                $endText.text(TEXT.winner(winner));
+                $endText.text(TEXT.looser);
             }
         });
     };

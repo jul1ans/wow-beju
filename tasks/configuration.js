@@ -22,10 +22,11 @@ module.exports = merge({
         nodeModulesPath + '/nosleep.js/dist/NoSleep.js',
         nodeModulesPath + '/three/build/three.js',
         nodeModulesPath + '/three/examples/js/loaders/ColladaLoader.js',
-        nodeModulesPath + '/stats-js/build/stats.min.js',
 
         // vendor files
         assetPath + '/js/vendor/qrcode.js',
+        assetPath + '/js/vendor/stats.js',
+
 
         // project files
         assetPath + '/js/modules/**/*.js',

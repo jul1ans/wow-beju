@@ -4,6 +4,7 @@ var App = App || {};
 
 App.Racer = (function (undefined) {
 
+    var gameSpeed = 1;
     var renderer, scene, camera, dirLight, stats, animation, finishFunction, colladaLoader,
         players = [], barriers = [], powerUps = [],
         finished = false, gameStarted = false, destroyed = true;
@@ -28,10 +29,10 @@ App.Racer = (function (undefined) {
             LEFT: -40,
             RIGHT: 40,
             START: -30,
-            END: 7000,
+            END: 4000,
             HEIGHT: 30,
-            BARRIERS: 200,
-            POWER_UPS: 30,
+            BARRIERS: 110,
+            POWER_UPS: 20,
             SAVE_AREA: {
                 START: 100,
                 END: 50
@@ -41,12 +42,18 @@ App.Racer = (function (undefined) {
         },
         PLAYER: {
             COLORS: [
-                '#d12a0c',
-                '#0bd15e'
+                '#3d31c4',
+                '#bc5218',
+                '#9731c4',
+                '#31c43d',
+                '#fff200'
             ],
             START_X_POSITION: [
                 15,
-                -15
+                -15,
+                32,
+                -32,
+                0
             ],
             DRONE_OBJECT: '/public/objects/drone.dae',
             MAX_AMOUNT: 2,
@@ -57,7 +64,7 @@ App.Racer = (function (undefined) {
             MIN_TURN: -0.5,
             MAX_TURN: 0.5,
             SPEED_X: 0.7,
-            SPEED_Z: 1,
+            SPEED_Z: 5,
             PLAYER_COLLISION_FORCE: 0.3,
             BARRIER_COLLISION_VALUE: 0.15,
             MIN_SPEED: 0.3, // minimal player speed
@@ -156,14 +163,14 @@ App.Racer = (function (undefined) {
 
         // hide box
         if (this.destroyed && this.object.scale.x > 0.01) {
-            this.object.scale.y -= 0.1;
-            this.object.scale.x -= 0.1;
-            this.object.scale.z -= 0.1;
+            this.object.scale.y -= 0.1 * gameSpeed;
+            this.object.scale.x -= 0.1 * gameSpeed;
+            this.object.scale.z -= 0.1 * gameSpeed;
         }
 
         // rotate box
         if (this.object.scale.x > 0.01) {
-            this.object.rotation.y += 0.02;
+            this.object.rotation.y += 0.02 * gameSpeed;
         }
     };
 
@@ -181,6 +188,14 @@ App.Racer = (function (undefined) {
      * @param player
      */
     Box.prototype.checkCollision = function (player) {
+
+        if (this.destroyed) return false;
+
+        // destroy element if position is less then player position
+        if (this.object.position.z < camera.position.z) {
+            this.destroy();
+            return false;
+        }
 
         // check if box and player collide
         var collision = _checkCollision(this.boxSize, player.boxSize);
@@ -263,14 +278,14 @@ App.Racer = (function (undefined) {
 
         // move blades
         for (var i in this.blades) {
-            this.blades[i].rotation.y += 0.5;
+            this.blades[i].rotation.y += 0.5 * gameSpeed;
         }
 
         // move up and down
         if (this.moveUp === true) {
-            this.object.position.y += 0.005;
+            this.object.position.y += 0.005 * gameSpeed;
         } else {
-            this.object.position.y -= 0.005;
+            this.object.position.y -= 0.005 * gameSpeed;
         }
 
         // calculate move up / down
@@ -355,14 +370,14 @@ App.Racer = (function (undefined) {
      * @returns {number}
      */
     Player.prototype.move = function () {
-        this.object.position.z += this.currentSpeed * SETTINGS.PLAYER.SPEED_Z;
+        this.object.position.z += this.currentSpeed * SETTINGS.PLAYER.SPEED_Z * gameSpeed;
 
         // check for maximum left / right movement
         if ((this.object.position.x > SETTINGS.WORLD.LEFT + SETTINGS.PLAYER.SIZE ||
             this.currentTurn < 0) &&
             (this.object.position.x < SETTINGS.WORLD.RIGHT - SETTINGS.PLAYER.SIZE ||
                 this.currentTurn > 0))
-            this.object.position.x -= SETTINGS.PLAYER.SPEED_X * this.currentTurn;
+            this.object.position.x -= SETTINGS.PLAYER.SPEED_X * this.currentTurn * gameSpeed;
 
         this.checkCollision();
         this.animate();
@@ -513,9 +528,6 @@ App.Racer = (function (undefined) {
             }
         }
 
-        // todo: optimize barriers and power up calculation
-        // todo: check all barriers and powerUps iterations and calculate remove old barriers and only calculate until barrier is visible
-
         // animate barriers
         for (var bIndex in barriers) {
             barriers[bIndex].animate();
@@ -645,6 +657,14 @@ App.Racer = (function (undefined) {
 
     var _render = function () {
         animation = window.requestAnimationFrame(_render);
+
+        var fps = stats.getFPS();
+
+        if (fps === 0) {
+            gameSpeed = 1;
+        } else {
+            gameSpeed = 60 / fps;
+        }
 
         stats.begin();
 

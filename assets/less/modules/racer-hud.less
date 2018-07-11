@@ -25,12 +25,20 @@
         }
     }
 
-    &__player--0 {
+    &__player--0, &__player--2, &__player--4 {
         left: 30px;
     }
 
-    &__player--1 {
+    &__player--1, &__player--3 {
         right: 30px;
+    }
+
+    &__player--2, &__player--3 {
+        bottom: 70px;
+    }
+
+    &__player--4 {
+        bottom: 110px;
     }
 
     &__winner {
@@ -38,11 +46,9 @@
         left: 30px;
         right: 30px;
         text-align: center;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 5vw;
+        top: 45px;
+        font-size: 4vw;
         text-transform: uppercase;
         font-weight: 700;
-        color: #054a05;
     }
 }

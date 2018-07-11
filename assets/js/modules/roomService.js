@@ -1,4 +1,4 @@
-/*globals GLOBALS, io, QRCode*/
+/*globals GLOBALS, io, QRCode, history*/
 
 var App = App || {};
 
@@ -27,11 +27,13 @@ App.RoomService = (function (undefined) {
         config.$startScreen.removeClass('hidden');
 
         if (shareHash === undefined) {
-            // shareHash = 'BaJ' + Math.floor(Math.random() * 100000);
-            shareHash = 'BaJ';
+            shareHash = 'BaJ' + Math.floor(Math.random() * 100000);
+            // shareHash = 'BaJ';
+            var newHostUrl = window.location.href + '?' + config.typeParam + '=' + USER_TYPES.HOST + '&' + config.codeParam + '=' + shareHash;
+            history.replaceState({}, '', newHostUrl);
         }
 
-        var shareUrl = window.location.href + '?' + config.typeParam + '=' + USER_TYPES.PLAYER + '&' + config.codeParam + '=' + shareHash;
+        var shareUrl = window.location.href.split('?')[0] + '?' + config.typeParam + '=' + USER_TYPES.PLAYER + '&' + config.codeParam + '=' + shareHash;
         new QRCode(config.qrElement, shareUrl);
 
         return shareHash;
