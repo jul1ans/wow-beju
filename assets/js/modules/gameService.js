@@ -15,6 +15,16 @@ App.GameService = (function (undefined) {
     };
 
     var $window = $(window);
+
+    /**
+     * Vibrate device
+     * @param (time)
+     * @private
+     */
+    var _vibrate = function (time) {
+        if (!window.navigator.vibrate) return;
+        window.navigator.vibrate(typeof time === 'number' ? time : 200);
+    };
     
     var _requestFullScreen = function () {
         var doc = window.document;
@@ -37,7 +47,7 @@ App.GameService = (function (undefined) {
      * @private
      */
     var _addPlayer = function (socket) {
-        var playerData = App.Racer.addPlayer();
+        var playerData = App.Racer.addPlayer(socket);
 
         socket.emit('newPlayerData', playerData);
     };
@@ -233,6 +243,7 @@ App.GameService = (function (undefined) {
             finished = true;
             $endWrapper.removeClass('hidden');
             $accelerateButton.addClass('hidden');
+            _vibrate(500);
 
             if (winner === 0) {
                 $endText.text(TEXT.draw);
@@ -241,6 +252,10 @@ App.GameService = (function (undefined) {
             } else {
                 $endText.text(TEXT.looser);
             }
+        });
+
+        socket.on('vibrate', function (data) {
+            _vibrate(data.time);
         });
     };
 

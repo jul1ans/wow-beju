@@ -159,6 +159,11 @@ var RoomService = (function (undefined) {
             console.log('re-calc player index', index);
         });
 
+        rooms[roomId].host.on('vibrate', function (data) {
+            if (data.index !== index) return;
+            player.emit('vibrate', data);
+        });
+
         // remove player on disconnect
         player.on('disconnect', function () {
             console.log('PLAYER: remove from room', roomId);

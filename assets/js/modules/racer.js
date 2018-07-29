@@ -56,7 +56,7 @@ App.Racer = (function (undefined) {
                 0
             ],
             DRONE_OBJECT: '/public/objects/drone.dae',
-            MAX_AMOUNT: 2,
+            MAX_AMOUNT: 1,
             SIZE: 7,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
@@ -212,9 +212,10 @@ App.Racer = (function (undefined) {
      * @param index
      * @param color
      * @param x
+     * @param socket
      * @constructor
      */
-    var Player = function (index, color, x) {
+    var Player = function (index, color, x, socket) {
         this.index = index;
 
         this.ready = false;
@@ -222,7 +223,7 @@ App.Racer = (function (undefined) {
         this.currentTurn = 0;
         this.currentSpeed = 0; // value between 0 - 1
         this.powerUps = 0; // amount of power ups (for acceleration)
-
+        this.socket = socket;
 
         colladaLoader.load(SETTINGS.PLAYER.DRONE_OBJECT, function (collada) {
             this.object = collada.scene;
@@ -269,6 +270,13 @@ App.Racer = (function (undefined) {
 
             this.ready = true;
         }.bind(this));
+    };
+
+    Player.prototype.vibrate = function (time) {
+        this.socket.emit('vibrate', {
+            index: this.index,
+            time: time
+        });
     };
 
     /**
@@ -421,6 +429,7 @@ App.Racer = (function (undefined) {
                 powerUp.checkCollision(this)
             ) {
                 this.powerUps += 1;
+                this.vibrate(100);
                 App.RacerHud.addPowerUp(this.index);
             }
         }
@@ -441,11 +450,13 @@ App.Racer = (function (undefined) {
                     players[p].turn(Math.abs(this.currentTurn) * SETTINGS.PLAYER.PLAYER_COLLISION_FORCE);
                     players[p].object.position.x -= SETTINGS.PLAYER.PLAYER_COLLISION_FORCE * 2;
                 }
+                this.vibrate(400);
             }
         }
 
         if (barrierCollision) {
             this.slowDown(SETTINGS.PLAYER.BARRIER_COLLISION_VALUE);
+            this.vibrate(300);
         }
     };
 
@@ -741,9 +752,10 @@ App.Racer = (function (undefined) {
 
     /**
      * Create new player and add it to the scene
+     * @param socket
      * @returns {boolean|*} return false if failed or return player data
      */
-    var addPlayer = function () {
+    var addPlayer = function (socket) {
         var index = players.length;
         if (index === SETTINGS.PLAYER.MAX_AMOUNT) return false;
 
@@ -753,7 +765,8 @@ App.Racer = (function (undefined) {
         var newPlayer = new Player(
             index,
             SETTINGS.PLAYER.COLORS[index],
-            SETTINGS.PLAYER.START_X_POSITION[index]);
+            SETTINGS.PLAYER.START_X_POSITION[index],
+            socket);
 
         players.push(newPlayer);
 
