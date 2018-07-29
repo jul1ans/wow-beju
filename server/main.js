@@ -51,8 +51,8 @@ RoomService.init(io);
 
 function pingHeroku() {
     http.get('http://wow-beju.herokuapp.com/');
-
-    window.setTimeout(pingHeroku, 1200000) // ping every 20 minutes
+    
+    setTimeout(pingHeroku, 1200000) // ping every 20 minutes
 }
 
 
