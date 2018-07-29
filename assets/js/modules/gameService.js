@@ -58,8 +58,11 @@ App.GameService = (function (undefined) {
      */
     var _startKeyboardGame = function () {
         App.Racer.init();
-        App.Racer.addPlayer();
-        App.Racer.addPlayer();
+
+        for (var i = 0; i < App.Racer.getMaxAmount(); i++) {
+            App.Racer.addPlayer();
+        }
+
         App.RoomService.hideQrCode();
 
         $window.on('keydown', function (e) {

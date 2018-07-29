@@ -273,6 +273,7 @@ App.Racer = (function (undefined) {
     };
 
     Player.prototype.vibrate = function (time) {
+        if (!this.socket) return;
         this.socket.emit('vibrate', {
             index: this.index,
             time: time
@@ -735,6 +736,8 @@ App.Racer = (function (undefined) {
         if (finished || !gameStarted) return;
 
         var player = players[data.playerIndex];
+
+        if (!player) return;
 
         // do action depending on data
         if (data.powerUp) {
