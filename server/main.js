@@ -48,7 +48,14 @@ httpServer.listen(port, function () {
 
 RoomService.init(io);
 
-// setInterval(function() {
-//     http.get("http://<your app name>.herokuapp.com");
-// }, 300000); // every 5 minutes (300000)
+
+function pingHeroku() {
+    http.get('http://wow-beju.herokuapp.com/');
+
+    window.setTimeout(pingHeroku, 1200000) // ping every 20 minutes
+}
+
+
+// todo: only ping in production
+pingHeroku();
 
