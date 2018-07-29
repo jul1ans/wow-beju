@@ -1,13 +1,13 @@
 
 .button {
-    background: none;
+    background: rgba(255, 255, 255, 0);
     box-shadow: none;
-    border-radius: 5px;
+    border-radius: 0;
     -webkit-appearance: none;
-    color: black;
+    color: white;
     text-transform: uppercase;
     cursor: pointer;
-    border: solid 2px black;
+    border: solid 2px white;
     transition: all .12s ease;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -18,8 +18,9 @@
         outline: none;
     }
 
-    &, &:focus, &:hover, &:active {
-        background: #ccc;
+    &:focus, &:hover, &:active {
+        background: rgba(255, 255, 255, 1);
+        color: black;
     }
 
     &.mobile-click {
@@ -42,17 +43,5 @@
         display: inline-block;
         padding: 10px 20px;
         font-size: 1em;
-    }
-}
-
-body.no-touch {
-    .button {
-        border-bottom-width: 4px;
-        transform: translateY(0);
-
-        &:hover, &:focus {
-            border-bottom-width: 2px;
-            transform: translateY(2px);
-        }
     }
 }

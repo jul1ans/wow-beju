@@ -34,7 +34,11 @@ App.RoomService = (function (undefined) {
         }
 
         var shareUrl = window.location.href.split('?')[0] + '?' + config.typeParam + '=' + USER_TYPES.PLAYER + '&' + config.codeParam + '=' + shareHash;
-        new QRCode(config.qrElement, shareUrl);
+        new QRCode(config.qrElement, {
+            text: shareUrl,
+            width: 180,
+            height: 180
+        });
 
         return shareHash;
     };
