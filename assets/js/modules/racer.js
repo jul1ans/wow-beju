@@ -56,7 +56,7 @@ App.Racer = (function (undefined) {
                 0
             ],
             DRONE_OBJECT: '/public/objects/drone.dae',
-            MAX_AMOUNT: 1,
+            MAX_AMOUNT: 2,
             SIZE: 7,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
@@ -246,11 +246,10 @@ App.Racer = (function (undefined) {
             });
             this.top = topElements[0];
 
-            if (this.top === undefined) return;
-
-            // set color
-            this.top.material.color.set(this.color);
-
+            if (this.top !== undefined) {
+                // set color
+                this.top.material.color.set(this.color);
+            }
 
             var box = new THREE.Box3().setFromObject(this.object);
 
@@ -572,7 +571,7 @@ App.Racer = (function (undefined) {
     var _addBoxes = function (material, spaceBetween, amounts, boxArray, geometryType) {
 
         var boxSize = 4;
-        var y = 2;
+        var y = 2.5;
         var worldWidth = WORLD_WIDTH - boxSize;
 
         for (var i = 0; i < amounts; i++) {
@@ -622,7 +621,7 @@ App.Racer = (function (undefined) {
             beta: 0,
             shininess: 0.1
         }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.POWER_UPS,
-            SETTINGS.WORLD.POWER_UPS, powerUps, THREE.OctahedronBufferGeometry);
+            SETTINGS.WORLD.POWER_UPS, powerUps, THREE.IcosahedronBufferGeometry);
     };
 
     /**
