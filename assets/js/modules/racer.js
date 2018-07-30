@@ -56,7 +56,7 @@ App.Racer = (function (undefined) {
                 0
             ],
             DRONE_OBJECT: '/public/objects/Drone_05.dae',
-            MAX_AMOUNT: 1,
+            MAX_AMOUNT: 2,
             SIZE: 7,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
