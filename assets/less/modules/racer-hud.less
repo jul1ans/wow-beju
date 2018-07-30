@@ -41,14 +41,24 @@
         bottom: 110px;
     }
 
-    &__winner {
+    &__winner, &__info {
         position: absolute;
         left: 30px;
         right: 30px;
         text-align: center;
-        top: 45px;
         font-size: 4vw;
         text-transform: uppercase;
-        font-weight: 700;
+        font-weight: @font-weight-bold;
+    }
+
+    &__winner {
+        top: 45px;
+    }
+
+    &__info {
+        top: 50%;
+        z-index: 4;
+        transform: translateY(-50%);
+        color: white;
     }
 }

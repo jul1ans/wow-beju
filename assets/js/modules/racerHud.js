@@ -6,7 +6,7 @@ App.RacerHud = (function (undefined) {
 
     var initCalled = false,
         players = [],
-        $container, $players, $winner;
+        $container, $players, $winner, $body = $('body');
 
     var init = function () {
         if (initCalled) {
@@ -66,7 +66,7 @@ App.RacerHud = (function (undefined) {
         $winner = $('<div class="racer-hud__winner">');
         $winner.text(text);
 
-        $('body').append($winner);
+        $body.append($winner);
 
         window.setTimeout(hideWinner, 5000);
     };
@@ -77,6 +77,16 @@ App.RacerHud = (function (undefined) {
         $winner = undefined;
         $container.addClass('hidden');
     };
+    
+    var showInfoText = function (text, duration) {
+        var $text = $('<div class="racer-hud__info">' + text + '</div>');
+        
+        $body.append($text);
+        
+        window.setTimeout(function () {
+            $text.remove(); 
+        }, duration);
+    };
 
     return {
         init: init,
@@ -85,7 +95,8 @@ App.RacerHud = (function (undefined) {
         removePowerUp: removePowerUp,
         addPowerUp: addPowerUp,
         hideWinner: hideWinner,
-        showWinner: showWinner
+        showWinner: showWinner,
+        showInfoText: showInfoText
     };
 
 })();
