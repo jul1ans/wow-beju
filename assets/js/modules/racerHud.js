@@ -9,11 +9,14 @@ App.RacerHud = (function (undefined) {
         $container, $players, $winner;
 
     var init = function () {
-        if (initCalled) return;
-        initCalled = true;
-        $container = $('#racer-hud');
-        $container.removeClass('hidden');
-        $players = $('#racer-hud-players');
+        if (initCalled) {
+            $container.removeClass('hidden');
+        } else {
+            initCalled = true;
+            $container = $('#racer-hud');
+            $container.removeClass('hidden');
+            $players = $('#racer-hud-players');
+        }
     };
 
     var destroy = function () {
@@ -72,6 +75,7 @@ App.RacerHud = (function (undefined) {
         if ($winner === undefined) return;
         $winner.remove();
         $winner = undefined;
+        $container.addClass('hidden');
     };
 
     return {
