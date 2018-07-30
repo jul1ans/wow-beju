@@ -55,8 +55,8 @@ App.Racer = (function (undefined) {
                 -32,
                 0
             ],
-            DRONE_OBJECT: '/public/objects/drone.dae',
-            MAX_AMOUNT: 2,
+            DRONE_OBJECT: '/public/objects/Drone_05.dae',
+            MAX_AMOUNT: 1,
             SIZE: 7,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
@@ -113,7 +113,7 @@ App.Racer = (function (undefined) {
      */
     var _findChildrenObjectsByName = function (object, config) {
 
-        if (object.name === config.name) {
+        if (object.name && object.name.indexOf(config.name) !== -1) {
             config.objectArray.push(object);
         }
 
@@ -229,7 +229,6 @@ App.Racer = (function (undefined) {
             this.object = collada.scene;
             this.object.position.set(x, SETTINGS.PLAYER.SIZE / 2, 0);
             _activateShadowForChildren(this.object);
-
 
             // find all blades
             this.blades = [];
@@ -606,7 +605,7 @@ App.Racer = (function (undefined) {
             beta: 0,
             shininess: 0.2
         }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.BARRIERS,
-            SETTINGS.WORLD.BARRIERS, barriers, THREE.DodecahedronBufferGeometry);
+            SETTINGS.WORLD.BARRIERS, barriers, THREE.IcosahedronBufferGeometry);
     };
 
     /**
@@ -617,11 +616,11 @@ App.Racer = (function (undefined) {
         _addBoxes(new THREE.MeshPhongMaterial({
             color: 0xfcfafa,
             emissive: 0xffffff,
-            emissiveIntensity: 0.01,
+            emissiveIntensity: 0.015,
             beta: 0,
             shininess: 0.1
         }), (SETTINGS.WORLD.END - SETTINGS.WORLD.START) / SETTINGS.WORLD.POWER_UPS,
-            SETTINGS.WORLD.POWER_UPS, powerUps, THREE.IcosahedronBufferGeometry);
+            SETTINGS.WORLD.POWER_UPS, powerUps, THREE.OctahedronBufferGeometry);
     };
 
     /**
@@ -699,11 +698,13 @@ App.Racer = (function (undefined) {
             }
         }
 
-        console.log('GAME STARTS IN ' + SETTINGS.WORLD.START_TIMEOUT / 1000 + 'SECONDS');
+        for (var j = 0; j < SETTINGS.WORLD.START_TIMEOUT; j += 1000) {
+            window.setTimeout(App.RacerHud.showInfoText.bind(this, (SETTINGS.WORLD.START_TIMEOUT - j) / 1000, 900), j);
+        }
 
         window.setTimeout(function () {
 
-            console.log('GAME STARTS');
+            App.RacerHud.showInfoText('START', 900);
 
             gameStarted = true;
 
