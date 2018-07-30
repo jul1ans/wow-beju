@@ -148,6 +148,7 @@ var RoomService = (function (undefined) {
 
         // remove events on host disconnect
         rooms[roomId].host.on('disconnect', function () {
+            if (!rooms[roomId]) return;
             player.removeAllListeners('disconnect');
             player.removeAllListeners('controlData');
             player.removeAllListeners('playerReady');
@@ -155,30 +156,33 @@ var RoomService = (function (undefined) {
 
         // re-calculate index
         rooms[roomId].host.on('playerConnect', function () {
+            if (!rooms[roomId]) return;
             index = rooms[roomId].getPlayerIndex(player);
             console.log('re-calc player index', index);
         });
 
         rooms[roomId].host.on('vibrate', function (data) {
-            if (data.index !== index) return;
+            if (data.index !== index || !rooms[roomId]) return;
             player.emit('vibrate', data);
         });
 
         // remove player on disconnect
         player.on('disconnect', function () {
+            if (!rooms[roomId]) return;
             console.log('PLAYER: remove from room', roomId);
             rooms[roomId].removePlayer(player);
         });
 
         // send control data to host
         player.on('controlData', function (data) {
+            if (!rooms[roomId]) return;
             data.playerIndex = index;
             rooms[roomId].informHost('controlData', data);
         });
 
         // listen for ready event
         player.on('playerReady', function () {
-            if (playerReady) return;
+            if (playerReady || !rooms[roomId]) return;
             playerReady = true;
 
             rooms[roomId].informHost('playerReady');
