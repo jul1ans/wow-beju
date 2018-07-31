@@ -29,8 +29,8 @@ module.exports = merge({
 
 
         // project files
-        assetPath + '/js/modules/**/*.js',
         assetPath + '/js/globals.js',
+        assetPath + '/js/modules/**/*.js',
         assetPath + '/js/main.js'
     ],
     cssFiles: [ // additional css files (main.less is included by default)

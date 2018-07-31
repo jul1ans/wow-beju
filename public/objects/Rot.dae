@@ -14,7 +14,7 @@
             <init_from>Propeller1.jpg</init_from>
         </image>
         <image id="ID8">
-            <init_from>Drone_01.jpg</init_from>
+            <init_from>Drone_Rot.jpg</init_from>
         </image>
     </library_images>
     <library_effects>
