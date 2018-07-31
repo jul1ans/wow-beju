@@ -4,6 +4,10 @@ var App = App || {};
 
 App.Racer = (function (undefined) {
 
+    var MAX_PLAYER = parseInt(GLOBALS.FUNCTIONS.findGetParameter('max'));
+
+    console.log(MAX_PLAYER);
+
     var gameSpeed = 1;
     var renderer, scene, camera, dirLight, stats, animation, finishFunction, colladaLoader,
         players = [], barriers = [], powerUps = [],
@@ -42,12 +46,17 @@ App.Racer = (function (undefined) {
         },
         PLAYER: {
             COLORS: [
-                '#3d31c4',
-                '#bc5218',
-                '#9731c4',
-                '#31c43d',
-                '#fff200'
+                '#0292ad',
+                '#1e02ae',
+                '#7302ac',
+                '#af0b02'
             ],
+            COLOR_OBJ_MAP: {
+                '#0292ad': 'Aqua.dae',
+                '#1e02ae': 'Blau.dae',
+                '#7302ac': 'Lilla.dae',
+                '#af0b02': 'Rot.dae'
+            },
             START_X_POSITION: [
                 15,
                 -15,
@@ -55,8 +64,8 @@ App.Racer = (function (undefined) {
                 -32,
                 0
             ],
-            DRONE_OBJECT: '/public/objects/Drone_05.dae',
-            MAX_AMOUNT: 2,
+            DRONE_OBJECT_PATH: '/public/objects/',
+            MAX_AMOUNT: isNaN(MAX_PLAYER) ? 2 : MAX_PLAYER,
             SIZE: 7,
             TURN_TIME: 10,
             TURN_SCALE_FACTOR: 0.08,
@@ -71,7 +80,7 @@ App.Racer = (function (undefined) {
             MAX_SPEED: 1.6, // max player speed
             COLLISION_TIMEOUT: 1000 ,// in ms
             POWER_UP_VALUE: 0.15,
-            POWER_UP_TIMEOUT: 1200 // in ms
+            POWER_UP_TIMEOUT: 1300 // in ms
         }
     };
 
@@ -225,7 +234,7 @@ App.Racer = (function (undefined) {
         this.powerUps = 0; // amount of power ups (for acceleration)
         this.socket = socket;
 
-        colladaLoader.load(SETTINGS.PLAYER.DRONE_OBJECT, function (collada) {
+        colladaLoader.load(SETTINGS.PLAYER.DRONE_OBJECT_PATH + SETTINGS.PLAYER.COLOR_OBJ_MAP[color], function (collada) {
             this.object = collada.scene;
             this.object.position.set(x, SETTINGS.PLAYER.SIZE / 2, 0);
             _activateShadowForChildren(this.object);
